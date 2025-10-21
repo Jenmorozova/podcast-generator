@@ -516,6 +516,33 @@
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
+/* Переключатель режимов голосов */
+.voice-mode-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 4px;
+  background: #f7fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.btn-active {
+  background: #667eea !important;
+  color: white !important;
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+}
+
+.btn-inactive {
+  background: transparent !important;
+  color: #4a5568 !important;
+}
+
+.btn-inactive:hover {
+  background: #edf2f7 !important;
+  color: #2d3748 !important;
+}
+
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;

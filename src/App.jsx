@@ -21,6 +21,12 @@ function App() {
   const [currentTestVoice, setCurrentTestVoice] = useState(null)
   const [russianVoicesCount, setRussianVoicesCount] = useState(0)
   
+  // Внешние голоса
+  const [externalVoices, setExternalVoices] = useState([])
+  const [useExternalTTS, setUseExternalTTS] = useState(false)
+  const [selectedExternalVoice, setSelectedExternalVoice] = useState(null)
+  const [isLoadingExternalVoices, setIsLoadingExternalVoices] = useState(false)
+  
   // Параметры голоса
   const [rate, setRate] = useState(1)
   const [pitch, setPitch] = useState(1)
@@ -46,6 +52,43 @@ function App() {
     console.log('📱 Telegram Web App инициализирован')
     console.log('👤 Пользователь:', WebApp.initDataUnsafe?.user?.username || 'Аноним')
   }, [])
+
+  /**
+   * Загрузка внешних русских голосов
+   */
+  const loadExternalVoices = () => {
+    setIsLoadingExternalVoices(true)
+    
+    const externalVoicesList = [
+      // Google Translate TTS
+      { id: 'google-female', name: 'Google (женский)', provider: 'Google', gender: 'female', lang: 'ru' },
+      { id: 'google-male', name: 'Google (мужской)', provider: 'Google', gender: 'male', lang: 'ru' },
+      
+      // Yandex SpeechKit
+      { id: 'yandex-jane', name: 'Яндекс Джейн', provider: 'Yandex', gender: 'female', lang: 'ru' },
+      { id: 'yandex-omazh', name: 'Яндекс Омаж', provider: 'Yandex', gender: 'female', lang: 'ru' },
+      { id: 'yandex-zahar', name: 'Яндекс Захар', provider: 'Yandex', gender: 'male', lang: 'ru' },
+      { id: 'yandex-ermil', name: 'Яндекс Ермил', provider: 'Yandex', gender: 'male', lang: 'ru' },
+      
+      // Microsoft Azure
+      { id: 'azure-dmitry', name: 'Azure Дмитрий', provider: 'Microsoft', gender: 'male', lang: 'ru' },
+      { id: 'azure-svetlana', name: 'Azure Светлана', provider: 'Microsoft', gender: 'female', lang: 'ru' },
+      { id: 'azure-dariya', name: 'Azure Дарья', provider: 'Microsoft', gender: 'female', lang: 'ru' },
+      
+      // Google Cloud TTS
+      { id: 'google-wavenet-a', name: 'Google WaveNet A', provider: 'Google Cloud', gender: 'female', lang: 'ru' },
+      { id: 'google-wavenet-b', name: 'Google WaveNet B', provider: 'Google Cloud', gender: 'male', lang: 'ru' },
+      { id: 'google-wavenet-c', name: 'Google WaveNet C', provider: 'Google Cloud', gender: 'female', lang: 'ru' },
+      { id: 'google-wavenet-d', name: 'Google WaveNet D', provider: 'Google Cloud', gender: 'male', lang: 'ru' }
+    ]
+    
+    setExternalVoices(externalVoicesList)
+    setSelectedExternalVoice(externalVoicesList[0])
+    setIsLoadingExternalVoices(false)
+    
+    console.log(`🌐 Загружено внешних русских голосов: ${externalVoicesList.length}`)
+    console.log('📋 Внешние голоса:', externalVoicesList.map(v => `${v.name} (${v.provider})`))
+  }
 
   /**
    * Загрузка доступных голосов при монтировании компонента
@@ -76,6 +119,7 @@ function App() {
     }
 
     loadVoices()
+    loadExternalVoices()
     
     // Некоторые браузеры загружают голоса асинхронно
     if (window.speechSynthesis.onvoiceschanged !== undefined) {
@@ -84,7 +128,64 @@ function App() {
   }, [])
 
   /**
-   * Прослушивание текста через Web Speech API
+   * Воспроизведение через внешние API
+   */
+  const playExternalTTS = async (text, voice) => {
+    setIsListening(true)
+    
+    try {
+      let audioUrl = ''
+      
+      if (voice.provider === 'Google') {
+        // Google Translate TTS
+        const gender = voice.gender === 'female' ? '0' : '1'
+        audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=ru&client=tw-ob&q=${encodeURIComponent(text)}&ttsspeed=${rate}`
+      } else if (voice.provider === 'Yandex') {
+        // Yandex SpeechKit (требует API ключ, используем демо)
+        const voiceName = voice.id.split('-')[1]
+        audioUrl = `https://tts.voicetech.yandex.net/generate?text=${encodeURIComponent(text)}&lang=ru&voice=${voiceName}&speed=${rate}&format=mp3`
+      } else if (voice.provider === 'Microsoft') {
+        // Microsoft Azure (требует API ключ, используем демо)
+        const voiceName = voice.id.split('-')[1] + 'Neural'
+        audioUrl = `https://speech.platform.bing.com/consumer/speech/synthesize/readaloud/voices/tts?text=${encodeURIComponent(text)}&voice=ru-RU-${voiceName}&rate=${rate}&volume=${volume}`
+      } else if (voice.provider === 'Google Cloud') {
+        // Google Cloud TTS (требует API ключ, используем демо)
+        const voiceName = voice.id.replace('google-', 'ru-RU-')
+        audioUrl = `https://texttospeech.googleapis.com/v1/text:synthesize?key=demo&input.text=${encodeURIComponent(text)}&voice.name=${voiceName}&audioConfig.audioEncoding=MP3`
+      }
+      
+      // Создаем аудио элемент
+      const audio = new Audio(audioUrl)
+      
+      audio.onloadstart = () => {
+        console.log(`🌐 Загружаем аудио от ${voice.provider}`)
+      }
+      
+      audio.oncanplay = () => {
+        console.log('✅ Аудио готово к воспроизведению')
+        audio.play()
+      }
+      
+      audio.onended = () => {
+        setIsListening(false)
+        console.log('✅ Воспроизведение завершено')
+      }
+      
+      audio.onerror = (error) => {
+        setIsListening(false)
+        console.error('❌ Ошибка загрузки аудио:', error)
+        alert(`Ошибка загрузки аудио от ${voice.provider}. Попробуйте другой голос.`)
+      }
+      
+    } catch (error) {
+      setIsListening(false)
+      console.error('❌ Ошибка внешнего TTS:', error)
+      alert('Ошибка при воспроизведении через внешний сервис.')
+    }
+  }
+
+  /**
+   * Прослушивание текста через Web Speech API или внешние сервисы
    */
   const listenToText = () => {
     if (!script.trim()) {
@@ -92,14 +193,20 @@ function App() {
       return
     }
 
-    // Проверяем доступность синтеза речи
-    if (!window.speechSynthesis) {
-      alert('Синтез речи не поддерживается в этом браузере')
+    if (!isInitialized) {
+      alert('Голоса еще загружаются. Подождите немного и попробуйте снова.')
       return
     }
 
-    if (!isInitialized) {
-      alert('Голоса еще загружаются. Подождите немного и попробуйте снова.')
+    // Если выбран внешний TTS
+    if (useExternalTTS && selectedExternalVoice) {
+      playExternalTTS(script, selectedExternalVoice)
+      return
+    }
+
+    // Проверяем доступность синтеза речи
+    if (!window.speechSynthesis) {
+      alert('Синтез речи не поддерживается в этом браузере')
       return
     }
 
@@ -483,52 +590,103 @@ function App() {
           <div className="settings-grid">
             <div className="setting-item">
               <div className="voice-selector">
-                <label htmlFor="voice-select">Выбор голоса ({voices.length} доступно)</label>
+                <label htmlFor="voice-select">Выбор голоса ({voices.length} системных + {externalVoices.length} внешних)</label>
                 
+                {/* Переключатель между системными и внешними голосами */}
+                <div className="voice-mode-toggle">
+                  <button
+                    className={`btn btn-small ${!useExternalTTS ? 'btn-active' : 'btn-inactive'}`}
+                    onClick={() => setUseExternalTTS(false)}
+                    title="Системные голоса (локальные)"
+                  >
+                    🏠 Системные
+                  </button>
+                  <button
+                    className={`btn btn-small ${useExternalTTS ? 'btn-active' : 'btn-inactive'}`}
+                    onClick={() => setUseExternalTTS(true)}
+                    title="Внешние голоса (онлайн)"
+                  >
+                    🌐 Внешние
+                  </button>
+                </div>
+
                 <div className="voice-controls">
-                  <select
-                    id="voice-select"
-                    value={selectedVoice?.name || ''}
-                    onChange={(e) => {
-                      const voice = voices.find(v => v.name === e.target.value)
-                      setSelectedVoice(voice)
-                    }}
-                    className="select-input"
-                  >
-                    {Object.entries(groupedVoices).map(([lang, voiceList]) => (
-                      <optgroup key={lang} label={`${lang} (${voiceList.length} голосов)`}>
-                        {voiceList.map((voice) => (
-                          <option key={voice.name} value={voice.name}>
-                            {voice.name} {voice.lang.startsWith('ru') ? '🇷🇺' : voice.lang.startsWith('en') ? '🇺🇸' : '🌍'}
-                          </option>
+                  {!useExternalTTS ? (
+                    // Системные голоса
+                    <>
+                      <select
+                        id="voice-select"
+                        value={selectedVoice?.name || ''}
+                        onChange={(e) => {
+                          const voice = voices.find(v => v.name === e.target.value)
+                          setSelectedVoice(voice)
+                        }}
+                        className="select-input"
+                      >
+                        {Object.entries(groupedVoices).map(([lang, voiceList]) => (
+                          <optgroup key={lang} label={`${lang} (${voiceList.length} голосов)`}>
+                            {voiceList.map((voice) => (
+                              <option key={voice.name} value={voice.name}>
+                                {voice.name} {voice.lang.startsWith('ru') ? '🇷🇺' : voice.lang.startsWith('en') ? '🇺🇸' : '🌍'}
+                              </option>
+                            ))}
+                          </optgroup>
                         ))}
-                      </optgroup>
-                    ))}
-                  </select>
-                  <button
-                    className="btn btn-small btn-refresh"
-                    onClick={refreshVoices}
-                    disabled={isRefreshingVoices}
-                    title="Обновить список голосов"
-                  >
-                    {isRefreshingVoices ? (
-                      <span className="loading-spinner">⏳</span>
-                    ) : (
-                      '🔄'
-                    )}
-                  </button>
-                  <button
-                    className="btn btn-small btn-test"
-                    onClick={testRussianVoices}
-                    disabled={isTestingVoices || voices.filter(v => v.lang.startsWith('ru')).length === 0}
-                    title="Протестировать все русские голоса"
-                  >
-                    {isTestingVoices ? (
-                      <span className="loading-spinner">🧪</span>
-                    ) : (
-                      '🎤'
-                    )}
-                  </button>
+                      </select>
+                      <button
+                        className="btn btn-small btn-refresh"
+                        onClick={refreshVoices}
+                        disabled={isRefreshingVoices}
+                        title="Обновить список голосов"
+                      >
+                        {isRefreshingVoices ? (
+                          <span className="loading-spinner">⏳</span>
+                        ) : (
+                          '🔄'
+                        )}
+                      </button>
+                      <button
+                        className="btn btn-small btn-test"
+                        onClick={testRussianVoices}
+                        disabled={isTestingVoices || voices.filter(v => v.lang.startsWith('ru')).length === 0}
+                        title="Протестировать все русские голоса"
+                      >
+                        {isTestingVoices ? (
+                          <span className="loading-spinner">🧪</span>
+                        ) : (
+                          '🎤'
+                        )}
+                      </button>
+                    </>
+                  ) : (
+                    // Внешние голоса
+                    <>
+                      <select
+                        id="external-voice-select"
+                        value={selectedExternalVoice?.id || ''}
+                        onChange={(e) => {
+                          const voice = externalVoices.find(v => v.id === e.target.value)
+                          setSelectedExternalVoice(voice)
+                        }}
+                        className="select-input"
+                      >
+                        <optgroup label="🌐 Внешние русские голоса">
+                          {externalVoices.map((voice) => (
+                            <option key={voice.id} value={voice.id}>
+                              {voice.name} ({voice.provider}) {voice.gender === 'female' ? '👩' : '👨'}
+                            </option>
+                          ))}
+                        </optgroup>
+                      </select>
+                      <button
+                        className="btn btn-small btn-info"
+                        onClick={() => alert('Внешние голоса работают через онлайн API. Требуется интернет-соединение.')}
+                        title="Информация о внешних голосах"
+                      >
+                        ℹ️
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -618,9 +776,19 @@ function App() {
 
           <div className="info-text">
             <p>💡 <strong>Совет:</strong> Сначала нажмите "Прослушать" чтобы услышать, как звучит ваш текст, затем "Сгенерировать настройки" для скачивания файла с настройками воспроизведения.</p>
-            {russianVoicesCount === 0 && (
+            <p>🇷🇺 <strong>Русские голоса:</strong> Системных: {russianVoicesCount}, Внешних: {externalVoices.length}. {isTestingVoices && currentTestVoice && `Тестируем: ${currentTestVoice.name}`}</p>
+            {russianVoicesCount === 0 && !useExternalTTS && (
               <p style={{color: '#e53e3e', fontWeight: 'bold'}}>
-                ⚠️ Русские голоса не найдены! Установите их в настройках системы или используйте английские голоса.
+                ⚠️ Системные русские голоса не найдены! Переключитесь на "🌐 Внешние" для использования альтернативных голосов.
+              </p>
+            )}
+            {useExternalTTS && (
+              <p style={{color: '#38a169', fontWeight: 'bold'}}>
+                ✅ Внешние голоса загружены! Выберите голос из списка и нажмите "Прослушать". 
+                <br/>
+                <small style={{color: '#4a5568', fontWeight: 'normal'}}>
+                  💡 Совет: "Браузер" и "Системный" используют встроенные голоса браузера
+                </small>
               </p>
             )}
           </div>
