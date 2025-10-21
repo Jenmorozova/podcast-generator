@@ -483,103 +483,52 @@ function App() {
           <div className="settings-grid">
             <div className="setting-item">
               <div className="voice-selector">
-                <label htmlFor="voice-select">Выбор голоса ({voices.length} системных + {externalVoices.length} внешних)</label>
+                <label htmlFor="voice-select">Выбор голоса ({voices.length} доступно)</label>
                 
-                {/* Переключатель между системными и внешними голосами */}
-                <div className="voice-mode-toggle">
-                  <button
-                    className={`btn btn-small ${!useExternalTTS ? 'btn-active' : 'btn-inactive'}`}
-                    onClick={() => setUseExternalTTS(false)}
-                    title="Системные голоса (локальные)"
-                  >
-                    🏠 Системные
-                  </button>
-                  <button
-                    className={`btn btn-small ${useExternalTTS ? 'btn-active' : 'btn-inactive'}`}
-                    onClick={() => setUseExternalTTS(true)}
-                    title="Внешние голоса (онлайн)"
-                  >
-                    🌐 Внешние
-                  </button>
-                </div>
-
                 <div className="voice-controls">
-                  {!useExternalTTS ? (
-                    // Системные голоса
-                    <>
-                      <select
-                        id="voice-select"
-                        value={selectedVoice?.name || ''}
-                        onChange={(e) => {
-                          const voice = voices.find(v => v.name === e.target.value)
-                          setSelectedVoice(voice)
-                        }}
-                        className="select-input"
-                      >
-                        {Object.entries(groupedVoices).map(([lang, voiceList]) => (
-                          <optgroup key={lang} label={`${lang} (${voiceList.length} голосов)`}>
-                            {voiceList.map((voice) => (
-                              <option key={voice.name} value={voice.name}>
-                                {voice.name} {voice.lang.startsWith('ru') ? '🇷🇺' : voice.lang.startsWith('en') ? '🇺🇸' : '🌍'}
-                              </option>
-                            ))}
-                          </optgroup>
+                  <select
+                    id="voice-select"
+                    value={selectedVoice?.name || ''}
+                    onChange={(e) => {
+                      const voice = voices.find(v => v.name === e.target.value)
+                      setSelectedVoice(voice)
+                    }}
+                    className="select-input"
+                  >
+                    {Object.entries(groupedVoices).map(([lang, voiceList]) => (
+                      <optgroup key={lang} label={`${lang} (${voiceList.length} голосов)`}>
+                        {voiceList.map((voice) => (
+                          <option key={voice.name} value={voice.name}>
+                            {voice.name} {voice.lang.startsWith('ru') ? '🇷🇺' : voice.lang.startsWith('en') ? '🇺🇸' : '🌍'}
+                          </option>
                         ))}
-                      </select>
-                      <button
-                        className="btn btn-small btn-refresh"
-                        onClick={refreshVoices}
-                        disabled={isRefreshingVoices}
-                        title="Обновить список голосов"
-                      >
-                        {isRefreshingVoices ? (
-                          <span className="loading-spinner">⏳</span>
-                        ) : (
-                          '🔄'
-                        )}
-                      </button>
-                      <button
-                        className="btn btn-small btn-test"
-                        onClick={testRussianVoices}
-                        disabled={isTestingVoices || voices.filter(v => v.lang.startsWith('ru')).length === 0}
-                        title="Протестировать все русские голоса"
-                      >
-                        {isTestingVoices ? (
-                          <span className="loading-spinner">🧪</span>
-                        ) : (
-                          '🎤'
-                        )}
-                      </button>
-                    </>
-                  ) : (
-                    // Внешние голоса
-                    <>
-                      <select
-                        id="external-voice-select"
-                        value={selectedExternalVoice?.id || ''}
-                        onChange={(e) => {
-                          const voice = externalVoices.find(v => v.id === e.target.value)
-                          setSelectedExternalVoice(voice)
-                        }}
-                        className="select-input"
-                      >
-                        <optgroup label="🌐 Внешние русские голоса">
-                          {externalVoices.map((voice) => (
-                            <option key={voice.id} value={voice.id}>
-                              {voice.name} ({voice.provider}) {voice.gender === 'female' ? '👩' : '👨'}
-                            </option>
-                          ))}
-                        </optgroup>
-                      </select>
-                      <button
-                        className="btn btn-small btn-info"
-                        onClick={() => alert('Внешние голоса работают через онлайн API. Требуется интернет-соединение.')}
-                        title="Информация о внешних голосах"
-                      >
-                        ℹ️
-                      </button>
-                    </>
-                  )}
+                      </optgroup>
+                    ))}
+                  </select>
+                  <button
+                    className="btn btn-small btn-refresh"
+                    onClick={refreshVoices}
+                    disabled={isRefreshingVoices}
+                    title="Обновить список голосов"
+                  >
+                    {isRefreshingVoices ? (
+                      <span className="loading-spinner">⏳</span>
+                    ) : (
+                      '🔄'
+                    )}
+                  </button>
+                  <button
+                    className="btn btn-small btn-test"
+                    onClick={testRussianVoices}
+                    disabled={isTestingVoices || voices.filter(v => v.lang.startsWith('ru')).length === 0}
+                    title="Протестировать все русские голоса"
+                  >
+                    {isTestingVoices ? (
+                      <span className="loading-spinner">🧪</span>
+                    ) : (
+                      '🎤'
+                    )}
+                  </button>
                 </div>
               </div>
             </div>
@@ -670,19 +619,10 @@ function App() {
           <div className="info-text">
             <p>💡 <strong>Совет:</strong> Сначала нажмите "Прослушать" чтобы услышать, как звучит ваш текст, затем "Сгенерировать настройки" для скачивания файла с настройками воспроизведения.</p>
             <p>🔧 <strong>Если воспроизведение не работает:</strong> Попробуйте кликнуть на страницу перед нажатием кнопки, или используйте другой браузер (Chrome/Safari работают лучше всего).</p>
-            <p>🇷🇺 <strong>Русские голоса:</strong> Системных: {russianVoicesCount}, Внешних: {externalVoices.length}. {isTestingVoices && currentTestVoice && `Тестируем: ${currentTestVoice.name}`}</p>
-            {russianVoicesCount === 0 && !useExternalTTS && (
+            <p>🇷🇺 <strong>Русские голоса:</strong> {russianVoicesCount} найдено. {isTestingVoices && currentTestVoice && `Тестируем: ${currentTestVoice.name}`}</p>
+            {russianVoicesCount === 0 && (
               <p style={{color: '#e53e3e', fontWeight: 'bold'}}>
-                ⚠️ Системные русские голоса не найдены! Переключитесь на "🌐 Внешние" для использования альтернативных голосов.
-              </p>
-            )}
-            {useExternalTTS && (
-              <p style={{color: '#38a169', fontWeight: 'bold'}}>
-                ✅ Внешние голоса загружены! Выберите голос из списка и нажмите "Прослушать". 
-                <br/>
-                <small style={{color: '#4a5568', fontWeight: 'normal'}}>
-                  💡 Совет: "Браузер" и "Системный" используют встроенные голоса браузера
-                </small>
+                ⚠️ Русские голоса не найдены! Установите их в настройках системы или используйте английские голоса.
               </p>
             )}
             <p style={{color: '#805ad5', fontWeight: 'bold'}}>
