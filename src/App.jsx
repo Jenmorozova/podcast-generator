@@ -60,26 +60,24 @@ function App() {
     setIsLoadingExternalVoices(true)
     
     const externalVoicesList = [
-      // Google Translate TTS
+      // Google Translate TTS (единственный рабочий бесплатный API)
       { id: 'google-female', name: 'Google (женский)', provider: 'Google', gender: 'female', lang: 'ru' },
       { id: 'google-male', name: 'Google (мужской)', provider: 'Google', gender: 'male', lang: 'ru' },
       
-      // Yandex SpeechKit
-      { id: 'yandex-jane', name: 'Яндекс Джейн', provider: 'Yandex', gender: 'female', lang: 'ru' },
-      { id: 'yandex-omazh', name: 'Яндекс Омаж', provider: 'Yandex', gender: 'female', lang: 'ru' },
-      { id: 'yandex-zahar', name: 'Яндекс Захар', provider: 'Yandex', gender: 'male', lang: 'ru' },
-      { id: 'yandex-ermil', name: 'Яндекс Ермил', provider: 'Yandex', gender: 'male', lang: 'ru' },
+      // Остальные требуют API ключи (показываем как недоступные)
+      { id: 'yandex-jane', name: 'Яндекс Джейн (требует API)', provider: 'Yandex', gender: 'female', lang: 'ru' },
+      { id: 'yandex-omazh', name: 'Яндекс Омаж (требует API)', provider: 'Yandex', gender: 'female', lang: 'ru' },
+      { id: 'yandex-zahar', name: 'Яндекс Захар (требует API)', provider: 'Yandex', gender: 'male', lang: 'ru' },
+      { id: 'yandex-ermil', name: 'Яндекс Ермил (требует API)', provider: 'Yandex', gender: 'male', lang: 'ru' },
       
-      // Microsoft Azure
-      { id: 'azure-dmitry', name: 'Azure Дмитрий', provider: 'Microsoft', gender: 'male', lang: 'ru' },
-      { id: 'azure-svetlana', name: 'Azure Светлана', provider: 'Microsoft', gender: 'female', lang: 'ru' },
-      { id: 'azure-dariya', name: 'Azure Дарья', provider: 'Microsoft', gender: 'female', lang: 'ru' },
+      { id: 'azure-dmitry', name: 'Azure Дмитрий (требует API)', provider: 'Microsoft', gender: 'male', lang: 'ru' },
+      { id: 'azure-svetlana', name: 'Azure Светлана (требует API)', provider: 'Microsoft', gender: 'female', lang: 'ru' },
+      { id: 'azure-dariya', name: 'Azure Дарья (требует API)', provider: 'Microsoft', gender: 'female', lang: 'ru' },
       
-      // Google Cloud TTS
-      { id: 'google-wavenet-a', name: 'Google WaveNet A', provider: 'Google Cloud', gender: 'female', lang: 'ru' },
-      { id: 'google-wavenet-b', name: 'Google WaveNet B', provider: 'Google Cloud', gender: 'male', lang: 'ru' },
-      { id: 'google-wavenet-c', name: 'Google WaveNet C', provider: 'Google Cloud', gender: 'female', lang: 'ru' },
-      { id: 'google-wavenet-d', name: 'Google WaveNet D', provider: 'Google Cloud', gender: 'male', lang: 'ru' }
+      { id: 'google-wavenet-a', name: 'Google WaveNet A (требует API)', provider: 'Google Cloud', gender: 'female', lang: 'ru' },
+      { id: 'google-wavenet-b', name: 'Google WaveNet B (требует API)', provider: 'Google Cloud', gender: 'male', lang: 'ru' },
+      { id: 'google-wavenet-c', name: 'Google WaveNet C (требует API)', provider: 'Google Cloud', gender: 'female', lang: 'ru' },
+      { id: 'google-wavenet-d', name: 'Google WaveNet D (требует API)', provider: 'Google Cloud', gender: 'male', lang: 'ru' }
     ]
     
     setExternalVoices(externalVoicesList)
@@ -128,7 +126,7 @@ function App() {
   }, [])
 
   /**
-   * Воспроизведение через внешние API
+   * Воспроизведение через внешние API (только рабочие)
    */
   const playExternalTTS = async (text, voice) => {
     setIsListening(true)
@@ -137,44 +135,40 @@ function App() {
       let audioUrl = ''
       
       if (voice.provider === 'Google') {
-        // Google Translate TTS
-        const gender = voice.gender === 'female' ? '0' : '1'
+        // Google Translate TTS - единственный рабочий бесплатный API
         audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=ru&client=tw-ob&q=${encodeURIComponent(text)}&ttsspeed=${rate}`
-      } else if (voice.provider === 'Yandex') {
-        // Yandex SpeechKit (требует API ключ, используем демо)
-        const voiceName = voice.id.split('-')[1]
-        audioUrl = `https://tts.voicetech.yandex.net/generate?text=${encodeURIComponent(text)}&lang=ru&voice=${voiceName}&speed=${rate}&format=mp3`
-      } else if (voice.provider === 'Microsoft') {
-        // Microsoft Azure (требует API ключ, используем демо)
-        const voiceName = voice.id.split('-')[1] + 'Neural'
-        audioUrl = `https://speech.platform.bing.com/consumer/speech/synthesize/readaloud/voices/tts?text=${encodeURIComponent(text)}&voice=ru-RU-${voiceName}&rate=${rate}&volume=${volume}`
-      } else if (voice.provider === 'Google Cloud') {
-        // Google Cloud TTS (требует API ключ, используем демо)
-        const voiceName = voice.id.replace('google-', 'ru-RU-')
-        audioUrl = `https://texttospeech.googleapis.com/v1/text:synthesize?key=demo&input.text=${encodeURIComponent(text)}&voice.name=${voiceName}&audioConfig.audioEncoding=MP3`
-      }
-      
-      // Создаем аудио элемент
-      const audio = new Audio(audioUrl)
-      
-      audio.onloadstart = () => {
-        console.log(`🌐 Загружаем аудио от ${voice.provider}`)
-      }
-      
-      audio.oncanplay = () => {
-        console.log('✅ Аудио готово к воспроизведению')
-        audio.play()
-      }
-      
-      audio.onended = () => {
+        
+        // Создаем iframe для обхода CORS
+        const iframe = document.createElement('iframe')
+        iframe.style.display = 'none'
+        iframe.src = audioUrl
+        document.body.appendChild(iframe)
+        
+        // Создаем аудио элемент
+        const audio = new Audio(audioUrl)
+        
+        audio.oncanplay = () => {
+          console.log('✅ Google TTS готово к воспроизведению')
+          audio.play()
+        }
+        
+        audio.onended = () => {
+          setIsListening(false)
+          console.log('✅ Воспроизведение завершено')
+          document.body.removeChild(iframe)
+        }
+        
+        audio.onerror = (error) => {
+          setIsListening(false)
+          console.error('❌ Ошибка Google TTS:', error)
+          document.body.removeChild(iframe)
+          alert('Ошибка загрузки аудио от Google. Попробуйте системные голоса.')
+        }
+        
+      } else {
+        // Для остальных провайдеров показываем сообщение
         setIsListening(false)
-        console.log('✅ Воспроизведение завершено')
-      }
-      
-      audio.onerror = (error) => {
-        setIsListening(false)
-        console.error('❌ Ошибка загрузки аудио:', error)
-        alert(`Ошибка загрузки аудио от ${voice.provider}. Попробуйте другой голос.`)
+        alert(`Голос "${voice.name}" требует настройки API ключей.\n\nПока используйте:\n• Системные голоса (работают всегда)\n• Google Translate (бесплатно)`)
       }
       
     } catch (error) {
@@ -784,10 +778,12 @@ function App() {
             )}
             {useExternalTTS && (
               <p style={{color: '#38a169', fontWeight: 'bold'}}>
-                ✅ Внешние голоса загружены! Выберите голос из списка и нажмите "Прослушать". 
+                ✅ Внешние голоса загружены! 
                 <br/>
                 <small style={{color: '#4a5568', fontWeight: 'normal'}}>
-                  💡 Совет: "Браузер" и "Системный" используют встроенные голоса браузера
+                  💡 <strong>Работают:</strong> Google Translate (бесплатно)<br/>
+                  ⚠️ <strong>Требуют API ключи:</strong> Яндекс, Microsoft, Google Cloud<br/>
+                  🏠 <strong>Рекомендуем:</strong> Используйте системные голоса для лучшего качества
                 </small>
               </p>
             )}
