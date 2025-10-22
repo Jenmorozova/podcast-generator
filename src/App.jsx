@@ -987,7 +987,7 @@ function App() {
       </div>
 
       <footer className="footer">
-        <p>Бесплатный генератор подкастов на основе Web Speech API</p>
+        <p>by @Jen_Zhuravishkina</p>
       </footer>
     </div>
   )
