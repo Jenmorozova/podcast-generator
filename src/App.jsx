@@ -987,7 +987,7 @@ function App() {
       </div>
 
       <footer className="footer">
-        <p>by @Jen_Zhuravishkina</p>
+        <p>Tg:@Jen_Zhuravishkina</p>
       </footer>
     </div>
   )
