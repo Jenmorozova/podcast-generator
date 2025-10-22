@@ -65,8 +65,12 @@ function App() {
     
     const externalVoicesList = [
       // Системные голоса с улучшенным поиском
-      { id: 'google-female', name: 'Системный (женский)', provider: 'Google', gender: 'female', lang: 'ru' },
-      { id: 'google-male', name: 'Системный (мужской)', provider: 'Google', gender: 'male', lang: 'ru' }
+      { id: 'system-female', name: 'Системный (женский)', provider: 'System', gender: 'female', lang: 'ru' },
+      { id: 'system-male', name: 'Системный (мужской)', provider: 'System', gender: 'male', lang: 'ru' },
+      { id: 'system-soft', name: 'Системный (мягкий)', provider: 'System', gender: 'female', lang: 'ru' },
+      { id: 'system-deep', name: 'Системный (глубокий)', provider: 'System', gender: 'male', lang: 'ru' },
+      { id: 'system-fast', name: 'Системный (быстрый)', provider: 'System', gender: 'female', lang: 'ru' },
+      { id: 'system-slow', name: 'Системный (медленный)', provider: 'System', gender: 'male', lang: 'ru' }
     ]
     
     setExternalVoices(externalVoicesList)
@@ -155,16 +159,57 @@ function App() {
     try {
       let audioUrl = ''
       
-      if (voice.provider === 'Google') {
-        // Google Translate TTS - используем системный голос как fallback
-        console.log('🌐 Пытаемся использовать Google Translate...')
+      if (voice.provider === 'System') {
+        // Системные голоса с разными характеристиками
+        console.log('🎤 Используем системный голос:', voice.name)
         
-        // Сначала попробуем найти подходящий системный голос
-        const systemVoice = voices.find(v => 
-          v.lang.startsWith('ru') && 
-          (voice.gender === 'female' ? v.name.toLowerCase().includes('жен') || v.name.toLowerCase().includes('female') : 
-           voice.gender === 'male' ? v.name.toLowerCase().includes('муж') || v.name.toLowerCase().includes('male') : true)
-        ) || voices.find(v => v.lang.startsWith('ru')) || voices[0]
+        // Находим подходящий системный голос
+        let systemVoice = null
+        
+        if (voice.id === 'system-female') {
+          systemVoice = voices.find(v => 
+            v.lang.startsWith('ru') && 
+            (v.name.toLowerCase().includes('жен') || v.name.toLowerCase().includes('female') || 
+             v.name.toLowerCase().includes('милена') || v.name.toLowerCase().includes('катя') ||
+             v.name.toLowerCase().includes('анна') || v.name.toLowerCase().includes('светлана'))
+          )
+        } else if (voice.id === 'system-male') {
+          systemVoice = voices.find(v => 
+            v.lang.startsWith('ru') && 
+            (v.name.toLowerCase().includes('муж') || v.name.toLowerCase().includes('male') || 
+             v.name.toLowerCase().includes('юрий') || v.name.toLowerCase().includes('павел') ||
+             v.name.toLowerCase().includes('дмитрий') || v.name.toLowerCase().includes('иван'))
+          )
+        } else if (voice.id === 'system-soft') {
+          systemVoice = voices.find(v => 
+            v.lang.startsWith('ru') && 
+            (v.name.toLowerCase().includes('мягк') || v.name.toLowerCase().includes('soft') ||
+             v.name.toLowerCase().includes('милена') || v.name.toLowerCase().includes('катя'))
+          )
+        } else if (voice.id === 'system-deep') {
+          systemVoice = voices.find(v => 
+            v.lang.startsWith('ru') && 
+            (v.name.toLowerCase().includes('глубок') || v.name.toLowerCase().includes('deep') ||
+             v.name.toLowerCase().includes('юрий') || v.name.toLowerCase().includes('павел'))
+          )
+        } else if (voice.id === 'system-fast') {
+          systemVoice = voices.find(v => 
+            v.lang.startsWith('ru') && 
+            (v.name.toLowerCase().includes('быстр') || v.name.toLowerCase().includes('fast') ||
+             v.name.toLowerCase().includes('милена') || v.name.toLowerCase().includes('анна'))
+          )
+        } else if (voice.id === 'system-slow') {
+          systemVoice = voices.find(v => 
+            v.lang.startsWith('ru') && 
+            (v.name.toLowerCase().includes('медлен') || v.name.toLowerCase().includes('slow') ||
+             v.name.toLowerCase().includes('юрий') || v.name.toLowerCase().includes('дмитрий'))
+          )
+        }
+        
+        // Если не нашли специфичный голос, берем любой русский
+        if (!systemVoice) {
+          systemVoice = voices.find(v => v.lang.startsWith('ru')) || voices[0]
+        }
         
         if (systemVoice) {
           console.log('🔄 Переключаемся на системный голос:', systemVoice.name)
@@ -173,11 +218,26 @@ function App() {
           const processedText = processTextForSpeech(text)
           const utterance = new SpeechSynthesisUtterance(processedText)
           utterance.voice = systemVoice
-          utterance.rate = rate
-          utterance.pitch = pitch
-          utterance.volume = volume / 100
           
-          // Настройки для более естественного воспроизведения
+          // Настройки в зависимости от типа голоса
+          if (voice.id === 'system-fast') {
+            utterance.rate = Math.min(rate * 1.3, 2.0) // Быстрее
+            utterance.pitch = Math.min(pitch * 1.1, 2.0) // Выше
+          } else if (voice.id === 'system-slow') {
+            utterance.rate = Math.max(rate * 0.7, 0.3) // Медленнее
+            utterance.pitch = Math.max(pitch * 0.9, 0.5) // Ниже
+          } else if (voice.id === 'system-soft') {
+            utterance.rate = rate * 0.9 // Мягче
+            utterance.pitch = Math.min(pitch * 1.2, 2.0) // Выше
+          } else if (voice.id === 'system-deep') {
+            utterance.rate = rate * 0.8 // Глубже
+            utterance.pitch = Math.max(pitch * 0.8, 0.5) // Ниже
+          } else {
+            utterance.rate = rate
+            utterance.pitch = pitch
+          }
+          
+          utterance.volume = volume / 100
           utterance.lang = 'ru-RU'
           
           utterance.onstart = () => {
@@ -793,7 +853,7 @@ function App() {
                       </select>
                       <button
                         className="btn btn-small btn-info"
-                        onClick={() => alert('Улучшенные системные голоса!\n\n🎯 Автоматически находит лучший русский голос по полу\n⚡ Работает без интернета\n🆓 Полностью бесплатно\n\nПросто выберите голос и нажмите "Прослушать"!')}
+                        onClick={() => alert('6 русских голосов с разными характеристиками!\n\n👩 Женские: Обычный, Мягкий, Быстрый\n👨 Мужские: Обычный, Глубокий, Медленный\n🆓 Бесплатно: Работает без интернета\n⚡ Умно: Автоматически находит лучший голос\n\nПросто выберите голос и нажмите "Прослушать"!')}
                         title="Информация об улучшенных голосах"
                       >
                         ℹ️
