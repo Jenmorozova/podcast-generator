@@ -735,10 +735,23 @@ function App() {
       
       const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' })
       const url = URL.createObjectURL(blob)
-      setAudioUrl(url)
-      setIsGenerating(false)
       
-      console.log('✅ Text file with settings generated successfully')
+      // Создаем ссылку для скачивания
+      const downloadLink = document.createElement('a')
+      downloadLink.href = url
+      downloadLink.download = `podcast-settings-${new Date().toISOString().split('T')[0]}.txt`
+      document.body.appendChild(downloadLink)
+      downloadLink.click()
+      document.body.removeChild(downloadLink)
+      
+      // Очищаем URL
+      setTimeout(() => {
+        URL.revokeObjectURL(url)
+      }, 1000)
+      
+      setIsGenerating(false)
+      console.log('✅ Text file with settings downloaded successfully')
+      alert('Файл с настройками подкаста скачан!')
       
     } catch (error) {
       console.error('Error generating podcast:', error)
