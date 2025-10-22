@@ -872,30 +872,6 @@ function App() {
                           </optgroup>
                         ))}
                       </select>
-                      <button
-                        className="btn btn-small btn-refresh"
-                        onClick={refreshVoices}
-                        disabled={isRefreshingVoices}
-                        title="Обновить список голосов"
-                      >
-                        {isRefreshingVoices ? (
-                          <span className="loading-spinner">⏳</span>
-                        ) : (
-                          '🔄'
-                        )}
-                      </button>
-                      <button
-                        className="btn btn-small btn-test"
-                        onClick={testRussianVoices}
-                        disabled={isTestingVoices || voices.filter(v => v.lang && v.lang.startsWith('ru')).length === 0}
-                        title="Протестировать все русские голоса"
-                      >
-                        {isTestingVoices ? (
-                          <span className="loading-spinner">🧪</span>
-                        ) : (
-                          '🎤'
-                        )}
-                      </button>
                     </>
                   ) : (
                     // Внешние голоса
