@@ -92,16 +92,23 @@ function App() {
       console.log(`🎤 Загружено русских голосов: ${russianVoices.length}`)
       console.log('📋 Русские голоса:', russianVoices.map(v => `${v.name} (${v.lang})`))
       
-      // Показываем только русские голоса
-      setVoices(russianVoices)
-      setRussianVoicesCount(russianVoices.length)
-      
-      // Выбираем первый русский голос по умолчанию
+      // Создаем один голос "Агата" на основе первого найденного русского голоса
       if (russianVoices.length > 0) {
-        setSelectedVoice(russianVoices[0])
-        console.log(`🇷🇺 Выбран русский голос: ${russianVoices[0].name}`)
+        const baseVoice = russianVoices[0]
+        const agataVoice = {
+          ...baseVoice,
+          name: 'Агата',
+          default: true
+        }
+        
+        setVoices([agataVoice])
+        setRussianVoicesCount(1)
+        setSelectedVoice(agataVoice)
+        console.log(`🇷🇺 Создан голос: Агата (на основе ${baseVoice.name})`)
       } else {
         console.log('⚠️ Русские голоса не найдены!')
+        setVoices([])
+        setRussianVoicesCount(0)
       }
       
       setIsInitialized(true)
