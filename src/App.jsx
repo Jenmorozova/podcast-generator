@@ -23,7 +23,7 @@ function App() {
   
   // Внешние голоса
   const [externalVoices, setExternalVoices] = useState([])
-  const [useExternalTTS, setUseExternalTTS] = useState(false) // По умолчанию системные голоса
+  const [useExternalTTS, setUseExternalTTS] = useState(false) // Принудительно отключены внешние голоса
   const [selectedExternalVoice, setSelectedExternalVoice] = useState(null)
   const [isLoadingExternalVoices, setIsLoadingExternalVoices] = useState(false)
   
@@ -669,125 +669,7 @@ function App() {
         setAudioUrl(null)
       }
       
-      // Если используется внешний TTS, генерируем MP3 через API
-      if (useExternalTTS && selectedExternalVoice && selectedExternalVoice.provider === 'ElevenLabs') {
-        console.log('🎤 Генерируем MP3 через ElevenLabs...')
-        
-            try {
-              const apiKey = 'sk_023813124d9f4c186725d0647662cda61762f277146e8cf3'
-              const voiceId = selectedExternalVoice.voiceId
-              
-              // Используем наш прокси-сервер для обхода CORS
-              const response = await fetch('/api/elevenlabs-proxy', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                  voiceId: voiceId,
-                  text: processTextForSpeech(script),
-                  apiKey: apiKey
-                })
-              })
-          
-          // Проверяем статус ответа
-          
-          if (!response.ok) {
-            throw new Error(`ElevenLabs API error: ${response.status} ${response.statusText}`)
-          }
-          
-          const audioBlob = await response.blob()
-          const audioUrl = URL.createObjectURL(audioBlob)
-          
-          // Создаем ссылку для скачивания MP3
-          const downloadLink = document.createElement('a')
-          downloadLink.href = audioUrl
-          downloadLink.download = `podcast-${new Date().toISOString().split('T')[0]}.mp3`
-          document.body.appendChild(downloadLink)
-          downloadLink.click()
-          document.body.removeChild(downloadLink)
-          
-          // Очищаем URL
-          setTimeout(() => {
-            URL.revokeObjectURL(audioUrl)
-          }, 1000)
-          
-          console.log('✅ MP3 файл скачан успешно')
-          setIsGenerating(false)
-          return
-          
-        } catch (error) {
-          // Пробуем прямой запрос к ElevenLabs как fallback
-          
-          try {
-            const directResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-              method: 'POST',
-              headers: {
-                'Accept': 'audio/mpeg',
-                'Content-Type': 'application/json',
-                'xi-api-key': apiKey
-              },
-              body: JSON.stringify({
-                text: processTextForSpeech(script),
-                model_id: 'eleven_multilingual_v2',
-                voice_settings: {
-                  stability: 0.5,
-                  similarity_boost: 0.5,
-                  style: 0.0,
-                  use_speaker_boost: true
-                }
-              })
-            })
-            
-            // Проверяем статус прямого запроса
-            
-            if (directResponse.ok) {
-              const audioBlob = await directResponse.blob()
-              const audioUrl = URL.createObjectURL(audioBlob)
-              
-              const downloadLink = document.createElement('a')
-              downloadLink.href = audioUrl
-              downloadLink.download = `podcast-${new Date().toISOString().split('T')[0]}.mp3`
-              document.body.appendChild(downloadLink)
-              downloadLink.click()
-              document.body.removeChild(downloadLink)
-              
-              setTimeout(() => {
-                URL.revokeObjectURL(audioUrl)
-              }, 1000)
-              
-              // MP3 файл скачан через прямой запрос
-              setIsGenerating(false)
-              return
-            }
-          } catch (directError) {
-            // Прямой запрос не работает
-          }
-          
-          // Если ничего не работает, переключаемся на системный голос
-          
-          const processedScript = processTextForSpeech(script)
-          const utterance = new SpeechSynthesisUtterance(processedScript)
-          
-          const allVoices = window.speechSynthesis.getVoices()
-          const systemVoice = allVoices.find(v => v.lang && v.lang.startsWith('ru')) || allVoices[0]
-          
-          if (systemVoice) {
-            utterance.voice = systemVoice
-            utterance.rate = rate
-            utterance.pitch = pitch
-            utterance.volume = volume
-            utterance.lang = 'ru-RU'
-            
-            window.speechSynthesis.speak(utterance)
-          }
-          
-          setIsGenerating(false)
-          return
-        }
-      }
-      
-      // Для системных голосов используем Google Translate TTS для генерации аудио
+      // Для всех голосов используем Google Translate TTS для генерации аудио
       console.log('🎤 Генерируем аудио через Google Translate TTS...')
       
       try {
@@ -972,11 +854,12 @@ function App() {
                     🏠 Системные
                   </button>
                   <button
-                    className={`btn btn-small ${useExternalTTS ? 'btn-active' : 'btn-inactive'}`}
-                    onClick={() => setUseExternalTTS(true)}
-                    title="Внешние голоса (онлайн)"
+                    className="btn btn-small btn-inactive"
+                    onClick={() => console.log('ℹ️ Внешние голоса временно отключены')}
+                    title="Внешние голоса отключены"
+                    disabled
                   >
-                    🌐 Внешние
+                    🌐 Внешние (отключены)
                   </button>
                 </div>
 
