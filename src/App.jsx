@@ -751,7 +751,6 @@ function App() {
       
       setIsGenerating(false)
       console.log('✅ Text file with settings downloaded successfully')
-      alert('Файл с настройками подкаста скачан!')
       
     } catch (error) {
       console.error('Error generating podcast:', error)
