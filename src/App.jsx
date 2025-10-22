@@ -66,22 +66,7 @@ function App() {
     const externalVoicesList = [
       // Google Translate TTS (единственный рабочий бесплатный API)
       { id: 'google-female', name: 'Google (женский)', provider: 'Google', gender: 'female', lang: 'ru' },
-      { id: 'google-male', name: 'Google (мужской)', provider: 'Google', gender: 'male', lang: 'ru' },
-      
-      // Яндекс SpeechKit (работает с API ключом)
-      { id: 'yandex-jane', name: 'Яндекс Джейн', provider: 'Yandex', gender: 'female', lang: 'ru' },
-      { id: 'yandex-omazh', name: 'Яндекс Омаж', provider: 'Yandex', gender: 'female', lang: 'ru' },
-      { id: 'yandex-zahar', name: 'Яндекс Захар', provider: 'Yandex', gender: 'male', lang: 'ru' },
-      { id: 'yandex-ermil', name: 'Яндекс Ермил', provider: 'Yandex', gender: 'male', lang: 'ru' },
-      
-      { id: 'azure-dmitry', name: 'Azure Дмитрий (требует API)', provider: 'Microsoft', gender: 'male', lang: 'ru' },
-      { id: 'azure-svetlana', name: 'Azure Светлана (требует API)', provider: 'Microsoft', gender: 'female', lang: 'ru' },
-      { id: 'azure-dariya', name: 'Azure Дарья (требует API)', provider: 'Microsoft', gender: 'female', lang: 'ru' },
-      
-      { id: 'google-wavenet-a', name: 'Google WaveNet A (требует API)', provider: 'Google Cloud', gender: 'female', lang: 'ru' },
-      { id: 'google-wavenet-b', name: 'Google WaveNet B (требует API)', provider: 'Google Cloud', gender: 'male', lang: 'ru' },
-      { id: 'google-wavenet-c', name: 'Google WaveNet C (требует API)', provider: 'Google Cloud', gender: 'female', lang: 'ru' },
-      { id: 'google-wavenet-d', name: 'Google WaveNet D (требует API)', provider: 'Google Cloud', gender: 'male', lang: 'ru' }
+      { id: 'google-male', name: 'Google (мужской)', provider: 'Google', gender: 'male', lang: 'ru' }
     ]
     
     setExternalVoices(externalVoicesList)
@@ -139,33 +124,62 @@ function App() {
       let audioUrl = ''
       
       if (voice.provider === 'Google') {
-        // Google Translate TTS
-        audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=ru&client=tw-ob&q=${encodeURIComponent(text)}&ttsspeed=${rate}`
+        // Google Translate TTS - используем простой подход
+        const gender = voice.gender === 'female' ? '0' : '1'
+        audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=ru&client=tw-ob&q=${encodeURIComponent(text)}&ttsspeed=${rate}&idx=${gender}`
         
+        console.log('🌐 Загружаем аудио от Google Translate')
+        
+        // Создаем скрытый iframe для обхода CORS
         const iframe = document.createElement('iframe')
         iframe.style.display = 'none'
+        iframe.style.width = '0'
+        iframe.style.height = '0'
         iframe.src = audioUrl
         document.body.appendChild(iframe)
         
+        // Создаем аудио элемент
         const audio = new Audio(audioUrl)
+        
+        // Обработчики событий
+        audio.onloadstart = () => {
+          console.log('🔄 Начинаем загрузку аудио...')
+        }
         
         audio.oncanplay = () => {
           console.log('✅ Google TTS готово к воспроизведению')
-          audio.play()
+          audio.play().catch(error => {
+            console.error('❌ Ошибка воспроизведения:', error)
+            setIsListening(false)
+            alert('Не удалось воспроизвести аудио. Попробуйте системные голоса.')
+          })
         }
         
         audio.onended = () => {
           setIsListening(false)
           console.log('✅ Воспроизведение завершено')
-          document.body.removeChild(iframe)
+          // Очищаем iframe
+          if (document.body.contains(iframe)) {
+            document.body.removeChild(iframe)
+          }
         }
         
         audio.onerror = (error) => {
           setIsListening(false)
           console.error('❌ Ошибка Google TTS:', error)
-          document.body.removeChild(iframe)
+          // Очищаем iframe
+          if (document.body.contains(iframe)) {
+            document.body.removeChild(iframe)
+          }
           alert('Ошибка загрузки аудио от Google. Попробуйте системные голоса.')
         }
+        
+        // Таймаут для очистки iframe
+        setTimeout(() => {
+          if (document.body.contains(iframe)) {
+            document.body.removeChild(iframe)
+          }
+        }, 30000) // 30 секунд
         
       } else if (voice.provider === 'Yandex') {
         // Яндекс SpeechKit API
@@ -736,59 +750,15 @@ function App() {
                       </select>
                       <button
                         className="btn btn-small btn-info"
-                        onClick={() => setShowApiKeyInput(!showApiKeyInput)}
-                        title="Настройка API ключей"
+                        onClick={() => alert('Google Translate работает без API ключей! Просто выберите голос и нажмите "Прослушать".')}
+                        title="Информация о Google Translate"
                       >
-                        🔑
+                        ℹ️
                       </button>
                     </>
                   )}
                 </div>
                 
-                {/* Форма для ввода API ключа */}
-                {showApiKeyInput && (
-                  <div className="api-key-form" style={{
-                    marginTop: '15px',
-                    padding: '15px',
-                    background: '#f7fafc',
-                    borderRadius: '8px',
-                    border: '1px solid #e2e8f0'
-                  }}>
-                    <h4 style={{ margin: '0 0 10px 0', color: '#2d3748' }}>🔑 API ключ Яндекса</h4>
-                    <p style={{ margin: '0 0 10px 0', fontSize: '0.9rem', color: '#4a5568' }}>
-                      Получите бесплатный API ключ на <a href="https://yandex.cloud.ru/" target="_blank" rel="noopener noreferrer">yandex.cloud.ru</a>
-                    </p>
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                      <input
-                        type="password"
-                        placeholder="Введите API ключ Яндекса..."
-                        value={yandexApiKey}
-                        onChange={(e) => setYandexApiKey(e.target.value)}
-                        style={{
-                          flex: 1,
-                          padding: '8px 12px',
-                          border: '1px solid #cbd5e0',
-                          borderRadius: '6px',
-                          fontSize: '14px'
-                        }}
-                      />
-                      <button
-                        className="btn btn-small"
-                        onClick={() => {
-                          if (yandexApiKey) {
-                            alert('API ключ сохранен! Теперь голоса Яндекса будут работать.')
-                            setShowApiKeyInput(false)
-                          } else {
-                            alert('Введите API ключ')
-                          }
-                        }}
-                        style={{ background: '#667eea', color: 'white' }}
-                      >
-                        Сохранить
-                      </button>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
 
@@ -885,12 +855,12 @@ function App() {
             )}
             {useExternalTTS && (
               <p style={{color: '#38a169', fontWeight: 'bold'}}>
-                ✅ Внешние голоса загружены! 
+                ✅ Google Translate голоса загружены! 
                 <br/>
                 <small style={{color: '#4a5568', fontWeight: 'normal'}}>
-                  💡 <strong>Работают:</strong> Google Translate (бесплатно), Яндекс (с API ключом)<br/>
-                  ⚠️ <strong>Требуют API ключи:</strong> Microsoft, Google Cloud<br/>
-                  🔑 <strong>Для Яндекса:</strong> Нажмите кнопку 🔑 и введите API ключ<br/>
+                  💡 <strong>Google Translate:</strong> 2 русских голоса (женский/мужской)<br/>
+                  🆓 <strong>Бесплатно:</strong> Работает без API ключей<br/>
+                  🌐 <strong>Онлайн:</strong> Требует интернет-соединение<br/>
                   🏠 <strong>Рекомендуем:</strong> Используйте системные голоса для лучшего качества
                 </small>
               </p>
