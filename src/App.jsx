@@ -210,48 +210,66 @@ function App() {
         const voiceId = voice.voiceId
         
             try {
-              // Используем прокси-сервер для обхода CORS
-              const response = await fetch('/api/elevenlabs-proxy', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                  voiceId: voiceId,
-                  text: processTextForSpeech(text),
-                  apiKey: apiKey
-                })
-              })
-          
-          if (!response.ok) {
-            throw new Error(`ElevenLabs API error: ${response.status} ${response.statusText}`)
-          }
-          
-          const audioBlob = await response.blob()
-          const audioUrl = URL.createObjectURL(audioBlob)
-          const audio = new Audio(audioUrl)
-          
-          audio.oncanplay = () => {
-            console.log('✅ ElevenLabs TTS готово к воспроизведению')
-            audio.play().catch(error => {
-              console.error('❌ Ошибка воспроизведения:', error)
-              setIsListening(false)
-              console.log('🔄 ElevenLabs недоступен, переключаемся на системный голос')
-            })
-          }
-          
-          audio.onended = () => {
-            setIsListening(false)
-            console.log('✅ Воспроизведение завершено')
-            URL.revokeObjectURL(audioUrl)
-          }
-          
-          audio.onerror = (error) => {
-            setIsListening(false)
-            console.error('❌ Ошибка ElevenLabs TTS:', error)
-            URL.revokeObjectURL(audioUrl)
-            console.log('🔄 ElevenLabs аудио недоступно, переключаемся на системный голос')
-          }
+              // Используем iframe для обхода CORS
+              const iframe = document.createElement('iframe')
+              iframe.style.display = 'none'
+              document.body.appendChild(iframe)
+              
+              const encodedText = encodeURIComponent(processTextForSpeech(text))
+              const proxyUrl = `/elevenlabs-proxy.html?voiceId=${voiceId}&text=${encodedText}&apiKey=${apiKey}`
+              
+              iframe.src = proxyUrl
+              
+              const messageHandler = (event) => {
+                if (event.data.type === 'elevenlabs_audio_ready') {
+                  const audio = new Audio(event.data.audioUrl)
+                  audio.oncanplay = () => {
+                    console.log('✅ ElevenLabs TTS готово к воспроизведению')
+                    audio.play().catch(error => {
+                      console.error('❌ Ошибка воспроизведения:', error)
+                      setIsListening(false)
+                      console.log('🔄 ElevenLabs недоступен, переключаемся на системный голос')
+                    })
+                  }
+                  
+                  audio.onended = () => {
+                    setIsListening(false)
+                    console.log('✅ Воспроизведение завершено')
+                    URL.revokeObjectURL(event.data.audioUrl)
+                    document.body.removeChild(iframe)
+                    window.removeEventListener('message', messageHandler)
+                  }
+                  
+                  audio.onerror = (error) => {
+                    setIsListening(false)
+                    console.error('❌ Ошибка ElevenLabs TTS:', error)
+                    URL.revokeObjectURL(event.data.audioUrl)
+                    document.body.removeChild(iframe)
+                    window.removeEventListener('message', messageHandler)
+                    console.log('🔄 ElevenLabs аудио недоступно, переключаемся на системный голос')
+                  }
+                } else if (event.data.type === 'elevenlabs_error') {
+                  setIsListening(false)
+                  console.error('❌ Ошибка ElevenLabs:', event.data.error)
+                  document.body.removeChild(iframe)
+                  window.removeEventListener('message', messageHandler)
+                  console.log('🔄 ElevenLabs API недоступен, переключаемся на системный голос')
+                }
+              }
+              
+              window.addEventListener('message', messageHandler)
+              
+              // Таймаут на случай, если iframe не загрузится
+              setTimeout(() => {
+                if (document.body.contains(iframe)) {
+                  document.body.removeChild(iframe)
+                  window.removeEventListener('message', messageHandler)
+                  setIsListening(false)
+                  console.log('🔄 ElevenLabs таймаут, переключаемся на системный голос')
+                }
+              }, 10000)
+              
+              return // Выходим из try блока
           
         } catch (error) {
           setIsListening(false)
