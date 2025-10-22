@@ -117,25 +117,31 @@ function App() {
    */
   const processTextForSpeech = (text) => {
     return text
-      // Заменяем многоточие на паузу
-      .replace(/\.{3,}/g, '... ')
+      // Заменяем многоточие на длинную паузу (несколько пробелов)
+      .replace(/\.{3,}/g, '   ')
       // Заменяем восклицательные знаки на паузу
-      .replace(/!+/g, '! ')
+      .replace(/!+/g, ' ')
       // Заменяем вопросительные знаки на паузу
-      .replace(/\?+/g, '? ')
+      .replace(/\?+/g, ' ')
       // Заменяем точки на паузу
-      .replace(/\.+/g, '. ')
+      .replace(/\.+/g, ' ')
       // Заменяем запятые на короткую паузу
-      .replace(/,+/g, ', ')
+      .replace(/,+/g, ' ')
       // Заменяем двоеточие на паузу
-      .replace(/:/g, ': ')
+      .replace(/:/g, ' ')
       // Заменяем точку с запятой на паузу
-      .replace(/;/g, '; ')
+      .replace(/;/g, ' ')
       // Заменяем тире на паузу
-      .replace(/—/g, ' — ')
-      .replace(/-/g, ' - ')
-      // Убираем лишние пробелы
-      .replace(/\s+/g, ' ')
+      .replace(/—/g, ' ')
+      .replace(/-/g, ' ')
+      // Заменяем кавычки на паузу
+      .replace(/[""''«»]/g, ' ')
+      // Заменяем скобки на паузу
+      .replace(/[()]/g, ' ')
+      // Заменяем квадратные скобки на паузу
+      .replace(/[\[\]]/g, ' ')
+      // Убираем лишние пробелы, но оставляем паузы
+      .replace(/\s{2,}/g, ' ')
       .trim()
   }
 
@@ -170,6 +176,9 @@ function App() {
           utterance.rate = rate
           utterance.pitch = pitch
           utterance.volume = volume / 100
+          
+          // Настройки для более естественного воспроизведения
+          utterance.lang = 'ru-RU'
           
           utterance.onstart = () => {
             console.log('✅ Воспроизведение началось (системный голос)')
@@ -328,6 +337,7 @@ function App() {
       utterance.rate = rate
       utterance.pitch = pitch
       utterance.volume = volume
+      utterance.lang = 'ru-RU'
 
       // Устанавливаем обработчики ДО запуска
       utterance.onstart = () => {
@@ -545,6 +555,7 @@ function App() {
       utterance.rate = rate
       utterance.pitch = pitch
       utterance.volume = volume
+      utterance.lang = 'ru-RU'
 
       // Создаем промис для ожидания завершения синтеза
       const synthesisPromise = new Promise((resolve, reject) => {
