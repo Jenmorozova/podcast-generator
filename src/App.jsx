@@ -670,9 +670,87 @@ function App() {
         setAudioUrl(null)
       }
       
-    // Создаем utterance для синтеза речи
-    const processedScript = processTextForSpeech(script)
-    const utterance = new SpeechSynthesisUtterance(processedScript)
+      // Если используется внешний TTS, генерируем MP3 через API
+      if (useExternalTTS && selectedExternalVoice && selectedExternalVoice.provider === 'ElevenLabs') {
+        console.log('🎤 Генерируем MP3 через ElevenLabs...')
+        
+        const apiKey = 'sk_023813124d9f4c186725d0647662cda61762f277146e8cf3'
+        const voiceId = selectedExternalVoice.voiceId
+        
+        const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+          method: 'POST',
+          headers: {
+            'Accept': 'audio/mpeg',
+            'Content-Type': 'application/json',
+            'xi-api-key': apiKey
+          },
+          body: JSON.stringify({
+            text: processTextForSpeech(script),
+            model_id: 'eleven_multilingual_v2',
+            voice_settings: {
+              stability: 0.5,
+              similarity_boost: 0.5,
+              style: 0.0,
+              use_speaker_boost: true
+            }
+          })
+        })
+        
+        if (!response.ok) {
+          throw new Error(`ElevenLabs API error: ${response.status} ${response.statusText}`)
+        }
+        
+        const audioBlob = await response.blob()
+        const audioUrl = URL.createObjectURL(audioBlob)
+        
+        // Создаем ссылку для скачивания MP3
+        const downloadLink = document.createElement('a')
+        downloadLink.href = audioUrl
+        downloadLink.download = `podcast-${new Date().toISOString().split('T')[0]}.mp3`
+        document.body.appendChild(downloadLink)
+        downloadLink.click()
+        document.body.removeChild(downloadLink)
+        
+        // Очищаем URL
+        setTimeout(() => {
+          URL.revokeObjectURL(audioUrl)
+        }, 1000)
+        
+        console.log('✅ MP3 файл скачан успешно')
+        setIsGenerating(false)
+        return
+      }
+      
+      // Для системных голосов показываем инструкции
+      const instructions = `🎙️ ИНСТРУКЦИЯ ДЛЯ ЗАПИСИ АУДИО
+
+1️⃣ Нажмите "Прослушать" для воспроизведения
+2️⃣ Одновременно запустите запись экрана/аудио:
+   • macOS: Cmd+Shift+5 → "Записать весь экран" или "Записать выбранную область"
+   • Windows: Win+G → "Записать" 
+   • Chrome: Расширение "Screen Recorder"
+   • Firefox: Расширение "Screen Recorder"
+
+3️⃣ Остановите запись после завершения воспроизведения
+4️⃣ Сохраните файл в формате MP3/WAV
+
+💡 АЛЬТЕРНАТИВА:
+Используйте внешние программы:
+• OBS Studio (бесплатно)
+• QuickTime Player (macOS)
+• Voice Recorder (Windows)
+
+📝 НАСТРОЙКИ ДЛЯ ТОЧНОГО ВОСПРОИЗВЕДЕНИЯ:
+• Голос: ${selectedVoice?.name || 'Default'}
+• Скорость: ${rate}x
+• Высота тона: ${pitch}
+• Громкость: ${Math.round(volume * 100)}%`
+
+      alert(instructions)
+      
+      // Создаем utterance для синтеза речи
+      const processedScript = processTextForSpeech(script)
+      const utterance = new SpeechSynthesisUtterance(processedScript)
       
       if (selectedVoice) {
         // Используем оригинальный голос, если есть, иначе сам голос
@@ -686,13 +764,17 @@ function App() {
 
       // Создаем промис для ожидания завершения синтеза
       const synthesisPromise = new Promise((resolve, reject) => {
+        utterance.onstart = () => {
+          console.log('🎤 Начинаем воспроизведение для записи...')
+        }
+        
         utterance.onend = () => {
-          console.log('Speech synthesis completed for recording')
+          console.log('✅ Воспроизведение завершено')
           resolve()
         }
         
         utterance.onerror = (event) => {
-          console.error('Speech synthesis error during recording:', event.error)
+          console.error('Speech synthesis error:', event.error)
           reject(new Error('Ошибка синтеза речи: ' + event.error))
         }
       })
@@ -703,55 +785,7 @@ function App() {
       // Ждем завершения синтеза
       await synthesisPromise
       
-      // Создаем текстовый файл с настройками для воспроизведения
-      const settings = {
-        text: script,
-        voice: selectedVoice?.name || 'Default',
-        rate: rate,
-        pitch: pitch,
-        volume: volume,
-        timestamp: new Date().toISOString()
-      }
-      
-      const textContent = `Генератор подкастов - Настройки воспроизведения
-===============================================
-
-Текст: ${script}
-
-Настройки голоса:
-- Голос: ${settings.voice}
-- Скорость: ${rate}x
-- Высота тона: ${pitch}
-- Громкость: ${Math.round(volume * 100)}%
-
-Время создания: ${new Date().toLocaleString('ru-RU')}
-
-Инструкция:
-1. Скопируйте текст выше
-2. Вставьте в приложение
-3. Нажмите "Прослушать" для воспроизведения
-4. Используйте настройки выше для точного воспроизведения
-
-Примечание: Для записи аудио файла используйте внешние программы записи экрана или аудио.`
-      
-      const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' })
-      const url = URL.createObjectURL(blob)
-      
-      // Создаем ссылку для скачивания
-      const downloadLink = document.createElement('a')
-      downloadLink.href = url
-      downloadLink.download = `podcast-settings-${new Date().toISOString().split('T')[0]}.txt`
-      document.body.appendChild(downloadLink)
-      downloadLink.click()
-      document.body.removeChild(downloadLink)
-      
-      // Очищаем URL
-      setTimeout(() => {
-        URL.revokeObjectURL(url)
-      }, 1000)
-      
       setIsGenerating(false)
-      console.log('✅ Text file with settings downloaded successfully')
       
     } catch (error) {
       console.error('Error generating podcast:', error)
@@ -987,13 +1021,13 @@ function App() {
               disabled={isGenerating || !script.trim()}
             >
               <Download size={20} />
-              {isGenerating ? 'Генерация...' : 'Скачать файл'}
+              {isGenerating ? 'Генерация...' : (useExternalTTS ? 'Скачать MP3' : 'Записать аудио')}
             </button>
           </div>
 
 
           <div className="info-text">
-            <p>💡 <strong>Совет:</strong> Сначала нажмите "Прослушать" чтобы услышать, как звучит ваш текст, затем "Скачать файл" для получения файла с настройками воспроизведения.</p>
+            <p>💡 <strong>Совет:</strong> Сначала нажмите "Прослушать" чтобы услышать, как звучит ваш текст, затем {useExternalTTS ? '"Скачать MP3"' : '"Записать аудио"'} для получения аудио файла.</p>
           </div>
 
         </div>
