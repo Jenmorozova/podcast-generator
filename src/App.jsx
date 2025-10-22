@@ -23,7 +23,7 @@ function App() {
   
   // Внешние голоса
   const [externalVoices, setExternalVoices] = useState([])
-  const [useExternalTTS, setUseExternalTTS] = useState(false) // Принудительно отключены внешние голоса
+  const [useExternalTTS, setUseExternalTTS] = useState(false) // По умолчанию системные голоса
   const [selectedExternalVoice, setSelectedExternalVoice] = useState(null)
   const [isLoadingExternalVoices, setIsLoadingExternalVoices] = useState(false)
   
@@ -854,12 +854,11 @@ function App() {
                     🏠 Системные
                   </button>
                   <button
-                    className="btn btn-small btn-inactive"
-                    onClick={() => console.log('ℹ️ Внешние голоса временно отключены')}
-                    title="Внешние голоса отключены"
-                    disabled
+                    className={`btn btn-small ${useExternalTTS ? 'btn-active' : 'btn-inactive'}`}
+                    onClick={() => setUseExternalTTS(true)}
+                    title="Внешние голоса (онлайн)"
                   >
-                    🌐 Внешние (отключены)
+                    🌐 Внешние
                   </button>
                 </div>
 
