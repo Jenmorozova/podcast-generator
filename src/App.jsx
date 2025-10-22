@@ -819,29 +819,18 @@ function App() {
             </button>
 
             <button
-              className="btn btn-secondary"
+              className="btn btn-success"
               onClick={generatePodcast}
               disabled={isGenerating || !script.trim()}
             >
-              <Mic size={20} />
-              {isGenerating ? 'Генерация...' : 'Сгенерировать настройки'}
+              <Download size={20} />
+              {isGenerating ? 'Генерация...' : 'Скачать файл'}
             </button>
           </div>
 
-          {audioUrl && (
-            <div className="audio-controls">
-              <button
-                className="btn btn-success"
-                onClick={downloadPodcast}
-              >
-                <Download size={20} />
-                Скачать настройки
-              </button>
-            </div>
-          )}
 
           <div className="info-text">
-            <p>💡 <strong>Совет:</strong> Сначала нажмите "Прослушать" чтобы услышать, как звучит ваш текст, затем "Сгенерировать настройки" для скачивания файла с настройками воспроизведения.</p>
+            <p>💡 <strong>Совет:</strong> Сначала нажмите "Прослушать" чтобы услышать, как звучит ваш текст, затем "Скачать файл" для получения файла с настройками воспроизведения.</p>
             <p>🇷🇺 <strong>Русские голоса:</strong> Системных: {russianVoicesCount}, Внешних: {externalVoices.length}. {isTestingVoices && currentTestVoice && `Тестируем: ${currentTestVoice.name}`}</p>
             {russianVoicesCount === 0 && !useExternalTTS && (
               <p style={{color: '#e53e3e', fontWeight: 'bold'}}>
