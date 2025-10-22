@@ -56,9 +56,9 @@ function App() {
     console.log('📱 Telegram Web App инициализирован')
     console.log('👤 Пользователь:', WebApp.initDataUnsafe?.user?.username || 'Аноним')
     
-    // Диагностика внешних голосов
+    // Инициализация завершена
     setTimeout(() => {
-      console.log('🔍 Диагностика внешних голосов...')
+      console.log('✅ Приложение готово к работе')
     }, 2000)
   }, [])
 
@@ -683,14 +683,8 @@ function App() {
           const apiKey = 'sk_023813124d9f4c186725d0647662cda61762f277146e8cf3'
           const voiceId = selectedExternalVoice.voiceId
           
-          console.log('🔍 Диагностика ElevenLabs API:')
-          console.log('📍 URL:', window.location.origin)
-          console.log('🎤 Voice ID:', voiceId)
-          console.log('📝 Text length:', processTextForSpeech(script).length)
-          
           // Используем наш прокси-сервер для обхода CORS
           const proxyUrl = '/api/elevenlabs-proxy'
-          console.log('🌐 Прокси URL:', proxyUrl)
           
           const response = await fetch(proxyUrl, {
             method: 'POST',
@@ -704,8 +698,7 @@ function App() {
             })
           })
           
-          console.log('📡 Response status:', response.status)
-          console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()))
+          // Проверяем статус ответа
           
           if (!response.ok) {
             throw new Error(`ElevenLabs API error: ${response.status} ${response.statusText}`)
@@ -732,10 +725,7 @@ function App() {
           return
           
         } catch (error) {
-          console.error('❌ Ошибка прокси ElevenLabs:', error)
-          
           // Пробуем прямой запрос к ElevenLabs как fallback
-          console.log('🔄 Пробуем прямой запрос к ElevenLabs...')
           
           try {
             const directResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
@@ -757,7 +747,7 @@ function App() {
               })
             })
             
-            console.log('📡 Direct response status:', directResponse.status)
+            // Проверяем статус прямого запроса
             
             if (directResponse.ok) {
               const audioBlob = await directResponse.blob()
@@ -774,16 +764,15 @@ function App() {
                 URL.revokeObjectURL(audioUrl)
               }, 1000)
               
-              console.log('✅ MP3 файл скачан через прямой запрос')
+              // MP3 файл скачан через прямой запрос
               setIsGenerating(false)
               return
             }
           } catch (directError) {
-            console.error('❌ Прямой запрос тоже не работает:', directError)
+            // Прямой запрос не работает
           }
           
-          // Если ничего не работает, показываем системный голос
-          console.log('🔄 Переключаемся на системный голос...')
+          // Если ничего не работает, переключаемся на системный голос
           
           const processedScript = processTextForSpeech(script)
           const utterance = new SpeechSynthesisUtterance(processedScript)
@@ -1064,7 +1053,7 @@ function App() {
                       </select>
             <button
               className="btn btn-small btn-info"
-              onClick={() => alert('33 профессиональных голоса ElevenLabs!\n\n🎤 Высокое качество: Студийное звучание\n🌍 Многоязычность: Поддержка русского языка\n👥 Разнообразие: 33 разных голоса\n⚡ Быстро: Мгновенная генерация\n\n✅ Теперь работает через прокси-сервер!\nПросто выберите голос и нажмите "Прослушать"!')}
+              onClick={() => alert('33 профессиональных голоса ElevenLabs!\n\n🎤 Высокое качество: Студийное звучание\n🌍 Многоязычность: Поддержка русского языка\n👥 Разнообразие: 33 разных голоса\n⚡ Быстро: Мгновенная генерация\n\nПросто выберите голос и нажмите "Прослушать"!')}
               title="Информация об улучшенных голосах"
             >
               ℹ️
