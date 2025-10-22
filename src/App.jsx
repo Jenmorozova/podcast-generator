@@ -118,6 +118,7 @@ function App() {
    * Воспроизведение через внешние API (только рабочие)
    */
   const playExternalTTS = async (text, voice) => {
+    console.log('🎯 playExternalTTS вызвана:', { text: text.substring(0, 30) + '...', voice })
     setIsListening(true)
     
     try {
@@ -263,8 +264,15 @@ function App() {
       return
     }
 
+    console.log('🔍 Отладка:', {
+      useExternalTTS,
+      selectedExternalVoice,
+      script: script.substring(0, 50) + '...'
+    })
+
     // Если выбран внешний TTS
     if (useExternalTTS && selectedExternalVoice) {
+      console.log('🌐 Используем внешний TTS:', selectedExternalVoice.name)
       playExternalTTS(script, selectedExternalVoice)
       return
     }
