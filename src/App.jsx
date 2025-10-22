@@ -113,6 +113,33 @@ function App() {
   }, [])
 
   /**
+   * Обработка текста для правильного воспроизведения знаков препинания
+   */
+  const processTextForSpeech = (text) => {
+    return text
+      // Заменяем многоточие на паузу
+      .replace(/\.{3,}/g, '... ')
+      // Заменяем восклицательные знаки на паузу
+      .replace(/!+/g, '! ')
+      // Заменяем вопросительные знаки на паузу
+      .replace(/\?+/g, '? ')
+      // Заменяем точки на паузу
+      .replace(/\.+/g, '. ')
+      // Заменяем запятые на короткую паузу
+      .replace(/,+/g, ', ')
+      // Заменяем двоеточие на паузу
+      .replace(/:/g, ': ')
+      // Заменяем точку с запятой на паузу
+      .replace(/;/g, '; ')
+      // Заменяем тире на паузу
+      .replace(/—/g, ' — ')
+      .replace(/-/g, ' - ')
+      // Убираем лишние пробелы
+      .replace(/\s+/g, ' ')
+      .trim()
+  }
+
+  /**
    * Воспроизведение через внешние API (только рабочие)
    */
   const playExternalTTS = async (text, voice) => {
@@ -137,7 +164,8 @@ function App() {
           console.log('🔄 Переключаемся на системный голос:', systemVoice.name)
           
           // Используем системный голос
-          const utterance = new SpeechSynthesisUtterance(text)
+          const processedText = processTextForSpeech(text)
+          const utterance = new SpeechSynthesisUtterance(processedText)
           utterance.voice = systemVoice
           utterance.rate = rate
           utterance.pitch = pitch
@@ -290,7 +318,8 @@ function App() {
     // Ждем полной остановки
     setTimeout(() => {
       // Создаем новый utterance
-      const utterance = new SpeechSynthesisUtterance(script)
+      const processedScript = processTextForSpeech(script)
+      const utterance = new SpeechSynthesisUtterance(processedScript)
       
       if (selectedVoice) {
         utterance.voice = selectedVoice
@@ -444,7 +473,8 @@ function App() {
       console.log(`🎤 Тестируем голос ${i + 1}/${russianVoices.length}: ${voice.name}`)
       
       // Создаем utterance для тестирования
-      const utterance = new SpeechSynthesisUtterance('Привет! Это тест русского голоса.')
+      const testText = processTextForSpeech('Привет! Это тест русского голоса.')
+      const utterance = new SpeechSynthesisUtterance(testText)
       utterance.voice = voice
       utterance.rate = 1
       utterance.pitch = 1
@@ -504,8 +534,9 @@ function App() {
         setAudioUrl(null)
       }
       
-      // Создаем utterance для синтеза речи
-      const utterance = new SpeechSynthesisUtterance(script)
+    // Создаем utterance для синтеза речи
+    const processedScript = processTextForSpeech(script)
+    const utterance = new SpeechSynthesisUtterance(processedScript)
       
       if (selectedVoice) {
         utterance.voice = selectedVoice
