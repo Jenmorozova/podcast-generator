@@ -721,69 +721,106 @@ function App() {
         return
       }
       
-      // Для системных голосов показываем инструкции
-      const instructions = `🎙️ ИНСТРУКЦИЯ ДЛЯ ЗАПИСИ АУДИО
+      // Для системных голосов используем Google Translate TTS для генерации аудио
+      console.log('🎤 Генерируем аудио через Google Translate TTS...')
+      
+      try {
+        // Используем Google Translate TTS для генерации аудио
+        const encodedText = encodeURIComponent(processTextForSpeech(script))
+        const googleTtsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=ru&client=tw-ob&q=${encodedText}`
+        
+        console.log('🌐 Загружаем аудио от Google Translate...')
+        
+        const response = await fetch(googleTtsUrl, {
+          method: 'GET',
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+          }
+        })
+        
+        if (!response.ok) {
+          throw new Error(`Google TTS error: ${response.status} ${response.statusText}`)
+        }
+        
+        const audioBlob = await response.blob()
+        const audioUrl = URL.createObjectURL(audioBlob)
+        
+        // Создаем ссылку для скачивания аудио
+        const downloadLink = document.createElement('a')
+        downloadLink.href = audioUrl
+        downloadLink.download = `podcast-${new Date().toISOString().split('T')[0]}.mp3`
+        document.body.appendChild(downloadLink)
+        downloadLink.click()
+        document.body.removeChild(downloadLink)
+        
+        // Очищаем URL
+        setTimeout(() => {
+          URL.revokeObjectURL(audioUrl)
+        }, 1000)
+        
+        console.log('✅ Аудио файл скачан успешно через Google TTS')
+        
+      } catch (error) {
+        console.error('❌ Ошибка Google TTS:', error)
+        
+        // Fallback: показываем инструкции
+        const instructions = `🎙️ АВТОМАТИЧЕСКАЯ ЗАПИСЬ НЕ РАБОТАЕТ
+
+Попробуйте вручную:
 
 1️⃣ Нажмите "Прослушать" для воспроизведения
 2️⃣ Одновременно запустите запись экрана/аудио:
-   • macOS: Cmd+Shift+5 → "Записать весь экран" или "Записать выбранную область"
+   • macOS: Cmd+Shift+5 → "Записать весь экран"
    • Windows: Win+G → "Записать" 
    • Chrome: Расширение "Screen Recorder"
-   • Firefox: Расширение "Screen Recorder"
 
 3️⃣ Остановите запись после завершения воспроизведения
 4️⃣ Сохраните файл в формате MP3/WAV
 
-💡 АЛЬТЕРНАТИВА:
-Используйте внешние программы:
-• OBS Studio (бесплатно)
-• QuickTime Player (macOS)
-• Voice Recorder (Windows)
-
-📝 НАСТРОЙКИ ДЛЯ ТОЧНОГО ВОСПРОИЗВЕДЕНИЯ:
+📝 НАСТРОЙКИ:
 • Голос: ${selectedVoice?.name || 'Default'}
 • Скорость: ${rate}x
 • Высота тона: ${pitch}
 • Громкость: ${Math.round(volume * 100)}%`
 
-      alert(instructions)
-      
-      // Создаем utterance для синтеза речи
-      const processedScript = processTextForSpeech(script)
-      const utterance = new SpeechSynthesisUtterance(processedScript)
-      
-      if (selectedVoice) {
-        // Используем оригинальный голос, если есть, иначе сам голос
-        utterance.voice = selectedVoice.originalVoice || selectedVoice
+        alert(instructions)
+        
+        // Создаем utterance для синтеза речи
+        const processedScript = processTextForSpeech(script)
+        const utterance = new SpeechSynthesisUtterance(processedScript)
+        
+        if (selectedVoice) {
+          utterance.voice = selectedVoice.originalVoice || selectedVoice
+        }
+        
+        utterance.rate = rate
+        utterance.pitch = pitch
+        utterance.volume = volume
+        utterance.lang = 'ru-RU'
+
+        // Создаем промис для ожидания завершения синтеза
+        const synthesisPromise = new Promise((resolve, reject) => {
+          utterance.onstart = () => {
+            console.log('🎤 Начинаем воспроизведение для записи...')
+          }
+          
+          utterance.onend = () => {
+            console.log('✅ Воспроизведение завершено')
+            resolve()
+          }
+          
+          utterance.onerror = (event) => {
+            console.error('Speech synthesis error:', event.error)
+            reject(new Error('Ошибка синтеза речи: ' + event.error))
+          }
+        })
+
+        // Запускаем синтез речи
+        window.speechSynthesis.speak(utterance)
+        
+        // Ждем завершения синтеза
+        await synthesisPromise
       }
-      
-      utterance.rate = rate
-      utterance.pitch = pitch
-      utterance.volume = volume
-      utterance.lang = 'ru-RU'
-
-      // Создаем промис для ожидания завершения синтеза
-      const synthesisPromise = new Promise((resolve, reject) => {
-        utterance.onstart = () => {
-          console.log('🎤 Начинаем воспроизведение для записи...')
-        }
-        
-        utterance.onend = () => {
-          console.log('✅ Воспроизведение завершено')
-          resolve()
-        }
-        
-        utterance.onerror = (event) => {
-          console.error('Speech synthesis error:', event.error)
-          reject(new Error('Ошибка синтеза речи: ' + event.error))
-        }
-      })
-
-      // Запускаем синтез речи
-      window.speechSynthesis.speak(utterance)
-      
-      // Ждем завершения синтеза
-      await synthesisPromise
       
       setIsGenerating(false)
       
