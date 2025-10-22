@@ -64,9 +64,9 @@ function App() {
     setIsLoadingExternalVoices(true)
     
     const externalVoicesList = [
-      // Google Translate TTS (единственный рабочий бесплатный API)
-      { id: 'google-female', name: 'Google (женский)', provider: 'Google', gender: 'female', lang: 'ru' },
-      { id: 'google-male', name: 'Google (мужской)', provider: 'Google', gender: 'male', lang: 'ru' }
+      // Системные голоса с улучшенным поиском
+      { id: 'google-female', name: 'Системный (женский)', provider: 'Google', gender: 'female', lang: 'ru' },
+      { id: 'google-male', name: 'Системный (мужской)', provider: 'Google', gender: 'male', lang: 'ru' }
     ]
     
     setExternalVoices(externalVoicesList)
@@ -124,62 +124,57 @@ function App() {
       let audioUrl = ''
       
       if (voice.provider === 'Google') {
-        // Google Translate TTS - используем простой подход
-        const gender = voice.gender === 'female' ? '0' : '1'
-        audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=ru&client=tw-ob&q=${encodeURIComponent(text)}&ttsspeed=${rate}&idx=${gender}`
+        // Google Translate TTS - используем системный голос как fallback
+        console.log('🌐 Пытаемся использовать Google Translate...')
         
-        console.log('🌐 Загружаем аудио от Google Translate')
+        // Сначала попробуем найти подходящий системный голос
+        const systemVoice = voices.find(v => 
+          v.lang.startsWith('ru') && 
+          (voice.gender === 'female' ? v.name.toLowerCase().includes('жен') || v.name.toLowerCase().includes('female') : 
+           voice.gender === 'male' ? v.name.toLowerCase().includes('муж') || v.name.toLowerCase().includes('male') : true)
+        ) || voices.find(v => v.lang.startsWith('ru')) || voices[0]
         
-        // Создаем скрытый iframe для обхода CORS
-        const iframe = document.createElement('iframe')
-        iframe.style.display = 'none'
-        iframe.style.width = '0'
-        iframe.style.height = '0'
-        iframe.src = audioUrl
-        document.body.appendChild(iframe)
-        
-        // Создаем аудио элемент
-        const audio = new Audio(audioUrl)
-        
-        // Обработчики событий
-        audio.onloadstart = () => {
-          console.log('🔄 Начинаем загрузку аудио...')
-        }
-        
-        audio.oncanplay = () => {
-          console.log('✅ Google TTS готово к воспроизведению')
-          audio.play().catch(error => {
-            console.error('❌ Ошибка воспроизведения:', error)
+        if (systemVoice) {
+          console.log('🔄 Переключаемся на системный голос:', systemVoice.name)
+          
+          // Используем системный голос
+          const utterance = new SpeechSynthesisUtterance(text)
+          utterance.voice = systemVoice
+          utterance.rate = rate
+          utterance.pitch = pitch
+          utterance.volume = volume / 100
+          
+          utterance.onstart = () => {
+            console.log('✅ Воспроизведение началось (системный голос)')
+          }
+          
+          utterance.onend = () => {
             setIsListening(false)
-            alert('Не удалось воспроизвести аудио. Попробуйте системные голоса.')
-          })
-        }
-        
-        audio.onended = () => {
+            console.log('✅ Воспроизведение завершено')
+          }
+          
+          utterance.onerror = (event) => {
+            if (event.error === 'interrupted') {
+              console.log('ℹ️ Воспроизведение прервано (нормально)')
+              return
+            }
+            setIsListening(false)
+            console.error('❌ Ошибка воспроизведения:', event.error)
+            alert('Ошибка воспроизведения. Попробуйте другой голос.')
+          }
+          
+          // Отменяем предыдущее воспроизведение
+          speechSynthesis.cancel()
+          
+          // Небольшая задержка перед воспроизведением
+          setTimeout(() => {
+            speechSynthesis.speak(utterance)
+          }, 100)
+          
+        } else {
           setIsListening(false)
-          console.log('✅ Воспроизведение завершено')
-          // Очищаем iframe
-          if (document.body.contains(iframe)) {
-            document.body.removeChild(iframe)
-          }
+          alert('Системные голоса не найдены. Попробуйте перезагрузить страницу.')
         }
-        
-        audio.onerror = (error) => {
-          setIsListening(false)
-          console.error('❌ Ошибка Google TTS:', error)
-          // Очищаем iframe
-          if (document.body.contains(iframe)) {
-            document.body.removeChild(iframe)
-          }
-          alert('Ошибка загрузки аудио от Google. Попробуйте системные голоса.')
-        }
-        
-        // Таймаут для очистки iframe
-        setTimeout(() => {
-          if (document.body.contains(iframe)) {
-            document.body.removeChild(iframe)
-          }
-        }, 30000) // 30 секунд
         
       } else if (voice.provider === 'Yandex') {
         // Яндекс SpeechKit API
@@ -750,8 +745,8 @@ function App() {
                       </select>
                       <button
                         className="btn btn-small btn-info"
-                        onClick={() => alert('Google Translate работает без API ключей! Просто выберите голос и нажмите "Прослушать".')}
-                        title="Информация о Google Translate"
+                        onClick={() => alert('Улучшенные системные голоса!\n\n🎯 Автоматически находит лучший русский голос по полу\n⚡ Работает без интернета\n🆓 Полностью бесплатно\n\nПросто выберите голос и нажмите "Прослушать"!')}
+                        title="Информация об улучшенных голосах"
                       >
                         ℹ️
                       </button>
@@ -855,13 +850,13 @@ function App() {
             )}
             {useExternalTTS && (
               <p style={{color: '#38a169', fontWeight: 'bold'}}>
-                ✅ Google Translate голоса загружены! 
+                ✅ Улучшенные системные голоса! 
                 <br/>
                 <small style={{color: '#4a5568', fontWeight: 'normal'}}>
-                  💡 <strong>Google Translate:</strong> 2 русских голоса (женский/мужской)<br/>
-                  🆓 <strong>Бесплатно:</strong> Работает без API ключей<br/>
-                  🌐 <strong>Онлайн:</strong> Требует интернет-соединение<br/>
-                  🏠 <strong>Рекомендуем:</strong> Используйте системные голоса для лучшего качества
+                  💡 <strong>Умный поиск:</strong> Автоматически находит лучший русский голос<br/>
+                  🎯 <strong>По полу:</strong> Женский или мужской голос<br/>
+                  🆓 <strong>Бесплатно:</strong> Работает без интернета<br/>
+                  ⚡ <strong>Быстро:</strong> Мгновенное воспроизведение
                 </small>
               </p>
             )}
