@@ -120,21 +120,22 @@ function App() {
       console.log(`🎤 Загружено русских голосов: ${russianVoices.length}`)
       console.log('📋 Русские голоса:', russianVoices.map(v => `${v.name} (${v.lang})`))
       
-      // Используем первый русский голос, но отображаем его как "Агата"
+      // Используем "Google русский" голос, но отображаем его как "Агата"
       if (russianVoices.length > 0) {
-        const baseVoice = russianVoices[0]
+        // Ищем Google русский голос
+        const googleVoice = russianVoices.find(v => v.name.toLowerCase().includes('google')) || russianVoices[0]
         
         // Создаем объект для отображения с именем "Агата", но используем оригинальный голос
         const agataDisplay = {
-          ...baseVoice,
+          ...googleVoice,
           displayName: 'Агата',
-          originalVoice: baseVoice
+          originalVoice: googleVoice
         }
         
         setVoices([agataDisplay])
         setRussianVoicesCount(1)
         setSelectedVoice(agataDisplay)
-        console.log(`🇷🇺 Создан голос: Агата (на основе ${baseVoice.name})`)
+        console.log(`🇷🇺 Создан голос: Агата (на основе ${googleVoice.name})`)
       } else {
         console.log('⚠️ Русские голоса не найдены!')
         setVoices([])
