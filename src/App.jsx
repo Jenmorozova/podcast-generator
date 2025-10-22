@@ -92,18 +92,20 @@ function App() {
       console.log(`🎤 Загружено русских голосов: ${russianVoices.length}`)
       console.log('📋 Русские голоса:', russianVoices.map(v => `${v.name} (${v.lang})`))
       
-      // Создаем один голос "Агата" на основе первого найденного русского голоса
+      // Используем первый русский голос, но отображаем его как "Агата"
       if (russianVoices.length > 0) {
         const baseVoice = russianVoices[0]
-        const agataVoice = {
+        
+        // Создаем объект для отображения с именем "Агата", но используем оригинальный голос
+        const agataDisplay = {
           ...baseVoice,
-          name: 'Агата',
-          default: true
+          displayName: 'Агата',
+          originalVoice: baseVoice
         }
         
-        setVoices([agataVoice])
+        setVoices([agataDisplay])
         setRussianVoicesCount(1)
-        setSelectedVoice(agataVoice)
+        setSelectedVoice(agataDisplay)
         console.log(`🇷🇺 Создан голос: Агата (на основе ${baseVoice.name})`)
       } else {
         console.log('⚠️ Русские голоса не найдены!')
@@ -356,7 +358,8 @@ function App() {
       const utterance = new SpeechSynthesisUtterance(processedScript)
       
       if (selectedVoice) {
-        utterance.voice = selectedVoice
+        // Используем оригинальный голос, если есть, иначе сам голос
+        utterance.voice = selectedVoice.originalVoice || selectedVoice
       }
       
       utterance.rate = rate
@@ -574,7 +577,8 @@ function App() {
     const utterance = new SpeechSynthesisUtterance(processedScript)
       
       if (selectedVoice) {
-        utterance.voice = selectedVoice
+        // Используем оригинальный голос, если есть, иначе сам голос
+        utterance.voice = selectedVoice.originalVoice || selectedVoice
       }
       
       utterance.rate = rate
@@ -765,7 +769,7 @@ function App() {
                           <optgroup key={lang} label={`${lang} (${voiceList.length} голосов)`}>
                             {voiceList.map((voice) => (
                               <option key={voice.name} value={voice.name}>
-                                {voice.name} {voice.lang && voice.lang.startsWith('ru') ? '🇷🇺' : voice.lang && voice.lang.startsWith('en') ? '🇺🇸' : '🌍'}
+                                {voice.displayName || voice.name} {voice.lang && voice.lang.startsWith('ru') ? '🇷🇺' : voice.lang && voice.lang.startsWith('en') ? '🇺🇸' : '🌍'}
                               </option>
                             ))}
                           </optgroup>
