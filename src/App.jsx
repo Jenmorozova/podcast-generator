@@ -209,25 +209,19 @@ function App() {
         const apiKey = 'sk_023813124d9f4c186725d0647662cda61762f277146e8cf3'
         const voiceId = voice.voiceId
         
-        try {
-          const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-            method: 'POST',
-            headers: {
-              'Accept': 'audio/mpeg',
-              'Content-Type': 'application/json',
-              'xi-api-key': apiKey
-            },
-            body: JSON.stringify({
-              text: processTextForSpeech(text),
-              model_id: 'eleven_multilingual_v2',
-              voice_settings: {
-                stability: 0.5,
-                similarity_boost: 0.5,
-                style: 0.0,
-                use_speaker_boost: true
-              }
-            })
-          })
+            try {
+              // Используем прокси-сервер для обхода CORS
+              const response = await fetch('/api/elevenlabs-proxy', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  voiceId: voiceId,
+                  text: processTextForSpeech(text),
+                  apiKey: apiKey
+                })
+              })
           
           if (!response.ok) {
             throw new Error(`ElevenLabs API error: ${response.status} ${response.statusText}`)
@@ -679,24 +673,22 @@ function App() {
       if (useExternalTTS && selectedExternalVoice && selectedExternalVoice.provider === 'ElevenLabs') {
         console.log('🎤 Генерируем MP3 через ElevenLabs...')
         
-        try {
-          const apiKey = 'sk_023813124d9f4c186725d0647662cda61762f277146e8cf3'
-          const voiceId = selectedExternalVoice.voiceId
-          
-          // Используем наш прокси-сервер для обхода CORS
-          const proxyUrl = '/api/elevenlabs-proxy'
-          
-          const response = await fetch(proxyUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              voiceId: voiceId,
-              text: processTextForSpeech(script),
-              apiKey: apiKey
-            })
-          })
+            try {
+              const apiKey = 'sk_023813124d9f4c186725d0647662cda61762f277146e8cf3'
+              const voiceId = selectedExternalVoice.voiceId
+              
+              // Используем наш прокси-сервер для обхода CORS
+              const response = await fetch('/api/elevenlabs-proxy', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  voiceId: voiceId,
+                  text: processTextForSpeech(script),
+                  apiKey: apiKey
+                })
+              })
           
           // Проверяем статус ответа
           
