@@ -173,50 +173,8 @@ function App() {
         // Находим подходящий системный голос
         let systemVoice = null
         
-        if (voice.id === 'system-female') {
-          systemVoice = voices.find(v => 
-            v.lang.startsWith('ru') && 
-            (v.name.toLowerCase().includes('жен') || v.name.toLowerCase().includes('female') || 
-             v.name.toLowerCase().includes('милена') || v.name.toLowerCase().includes('катя') ||
-             v.name.toLowerCase().includes('анна') || v.name.toLowerCase().includes('светлана'))
-          )
-        } else if (voice.id === 'system-male') {
-          systemVoice = voices.find(v => 
-            v.lang.startsWith('ru') && 
-            (v.name.toLowerCase().includes('муж') || v.name.toLowerCase().includes('male') || 
-             v.name.toLowerCase().includes('юрий') || v.name.toLowerCase().includes('павел') ||
-             v.name.toLowerCase().includes('дмитрий') || v.name.toLowerCase().includes('иван'))
-          )
-        } else if (voice.id === 'system-soft') {
-          systemVoice = voices.find(v => 
-            v.lang.startsWith('ru') && 
-            (v.name.toLowerCase().includes('мягк') || v.name.toLowerCase().includes('soft') ||
-             v.name.toLowerCase().includes('милена') || v.name.toLowerCase().includes('катя'))
-          )
-        } else if (voice.id === 'system-deep') {
-          systemVoice = voices.find(v => 
-            v.lang.startsWith('ru') && 
-            (v.name.toLowerCase().includes('глубок') || v.name.toLowerCase().includes('deep') ||
-             v.name.toLowerCase().includes('юрий') || v.name.toLowerCase().includes('павел'))
-          )
-        } else if (voice.id === 'system-fast') {
-          systemVoice = voices.find(v => 
-            v.lang.startsWith('ru') && 
-            (v.name.toLowerCase().includes('быстр') || v.name.toLowerCase().includes('fast') ||
-             v.name.toLowerCase().includes('милена') || v.name.toLowerCase().includes('анна'))
-          )
-        } else if (voice.id === 'system-slow') {
-          systemVoice = voices.find(v => 
-            v.lang.startsWith('ru') && 
-            (v.name.toLowerCase().includes('медлен') || v.name.toLowerCase().includes('slow') ||
-             v.name.toLowerCase().includes('юрий') || v.name.toLowerCase().includes('дмитрий'))
-          )
-        }
-        
-        // Если не нашли специфичный голос, берем любой русский
-        if (!systemVoice) {
-          systemVoice = voices.find(v => v.lang.startsWith('ru')) || voices[0]
-        }
+        // Для всех системных голосов используем первый доступный русский голос
+        systemVoice = voices.find(v => v.lang && v.lang.startsWith('ru')) || voices[0]
         
         if (systemVoice) {
           console.log('🔄 Переключаемся на системный голос:', systemVoice.name)
@@ -807,7 +765,7 @@ function App() {
                           <optgroup key={lang} label={`${lang} (${voiceList.length} голосов)`}>
                             {voiceList.map((voice) => (
                               <option key={voice.name} value={voice.name}>
-                                {voice.name} {voice.lang.startsWith('ru') ? '🇷🇺' : voice.lang.startsWith('en') ? '🇺🇸' : '🌍'}
+                                {voice.name} {voice.lang && voice.lang.startsWith('ru') ? '🇷🇺' : voice.lang && voice.lang.startsWith('en') ? '🇺🇸' : '🌍'}
                               </option>
                             ))}
                           </optgroup>
@@ -828,7 +786,7 @@ function App() {
                       <button
                         className="btn btn-small btn-test"
                         onClick={testRussianVoices}
-                        disabled={isTestingVoices || voices.filter(v => v.lang.startsWith('ru')).length === 0}
+                        disabled={isTestingVoices || voices.filter(v => v.lang && v.lang.startsWith('ru')).length === 0}
                         title="Протестировать все русские голоса"
                       >
                         {isTestingVoices ? (
