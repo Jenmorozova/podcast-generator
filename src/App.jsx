@@ -674,51 +674,101 @@ function App() {
       if (useExternalTTS && selectedExternalVoice && selectedExternalVoice.provider === 'ElevenLabs') {
         console.log('🎤 Генерируем MP3 через ElevenLabs...')
         
-        const apiKey = 'sk_023813124d9f4c186725d0647662cda61762f277146e8cf3'
-        const voiceId = selectedExternalVoice.voiceId
-        
-        const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-          method: 'POST',
-          headers: {
-            'Accept': 'audio/mpeg',
-            'Content-Type': 'application/json',
-            'xi-api-key': apiKey
-          },
-          body: JSON.stringify({
-            text: processTextForSpeech(script),
-            model_id: 'eleven_multilingual_v2',
-            voice_settings: {
-              stability: 0.5,
-              similarity_boost: 0.5,
-              style: 0.0,
-              use_speaker_boost: true
-            }
+        try {
+          const apiKey = 'sk_023813124d9f4c186725d0647662cda61762f277146e8cf3'
+          const voiceId = selectedExternalVoice.voiceId
+          
+          // Пробуем прямой запрос
+          const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+            method: 'POST',
+            headers: {
+              'Accept': 'audio/mpeg',
+              'Content-Type': 'application/json',
+              'xi-api-key': apiKey
+            },
+            body: JSON.stringify({
+              text: processTextForSpeech(script),
+              model_id: 'eleven_multilingual_v2',
+              voice_settings: {
+                stability: 0.5,
+                similarity_boost: 0.5,
+                style: 0.0,
+                use_speaker_boost: true
+              }
+            })
           })
-        })
-        
-        if (!response.ok) {
-          throw new Error(`ElevenLabs API error: ${response.status} ${response.statusText}`)
+          
+          if (!response.ok) {
+            throw new Error(`ElevenLabs API error: ${response.status} ${response.statusText}`)
+          }
+          
+          const audioBlob = await response.blob()
+          const audioUrl = URL.createObjectURL(audioBlob)
+          
+          // Создаем ссылку для скачивания MP3
+          const downloadLink = document.createElement('a')
+          downloadLink.href = audioUrl
+          downloadLink.download = `podcast-${new Date().toISOString().split('T')[0]}.mp3`
+          document.body.appendChild(downloadLink)
+          downloadLink.click()
+          document.body.removeChild(downloadLink)
+          
+          // Очищаем URL
+          setTimeout(() => {
+            URL.revokeObjectURL(audioUrl)
+          }, 1000)
+          
+          console.log('✅ MP3 файл скачан успешно')
+          setIsGenerating(false)
+          return
+          
+        } catch (error) {
+          console.error('❌ Ошибка ElevenLabs API:', error)
+          
+          // Fallback: показываем инструкции для ручной записи
+          const instructions = `🎙️ ELEVENLABS API НЕ ДОСТУПЕН
+
+Возможные причины:
+• CORS блокировка в браузере
+• Проблемы с сетью
+• Ограничения API
+
+💡 РЕШЕНИЯ:
+
+1️⃣ Попробуйте другой браузер
+2️⃣ Используйте системный голос "Агата"
+3️⃣ Запишите вручную:
+   • Нажмите "Прослушать"
+   • Запишите экран/аудио
+   • Сохраните как MP3
+
+📝 НАСТРОЙКИ:
+• Голос: ${selectedExternalVoice.name}
+• Текст: ${script.substring(0, 50)}...`
+
+          alert(instructions)
+          
+          // Воспроизводим через системный голос как fallback
+          const processedScript = processTextForSpeech(script)
+          const utterance = new SpeechSynthesisUtterance(processedScript)
+          
+          // Используем системный голос
+          const allVoices = window.speechSynthesis.getVoices()
+          const systemVoice = allVoices.find(v => v.lang && v.lang.startsWith('ru')) || allVoices[0]
+          
+          if (systemVoice) {
+            utterance.voice = systemVoice
+            utterance.rate = rate
+            utterance.pitch = pitch
+            utterance.volume = volume
+            utterance.lang = 'ru-RU'
+            
+            window.speechSynthesis.speak(utterance)
+          }
+          
+          setIsGenerating(false)
+          return
         }
-        
-        const audioBlob = await response.blob()
-        const audioUrl = URL.createObjectURL(audioBlob)
-        
-        // Создаем ссылку для скачивания MP3
-        const downloadLink = document.createElement('a')
-        downloadLink.href = audioUrl
-        downloadLink.download = `podcast-${new Date().toISOString().split('T')[0]}.mp3`
-        document.body.appendChild(downloadLink)
-        downloadLink.click()
-        document.body.removeChild(downloadLink)
-        
-        // Очищаем URL
-        setTimeout(() => {
-          URL.revokeObjectURL(audioUrl)
-        }, 1000)
-        
-        console.log('✅ MP3 файл скачан успешно')
-        setIsGenerating(false)
-        return
       }
       
       // Для системных голосов используем Google Translate TTS для генерации аудио
@@ -977,13 +1027,13 @@ function App() {
                           ))}
                         </optgroup>
                       </select>
-                      <button
-                        className="btn btn-small btn-info"
-                        onClick={() => alert('33 профессиональных голоса ElevenLabs!\n\n🎤 Высокое качество: Студийное звучание\n🌍 Многоязычность: Поддержка русского языка\n👥 Разнообразие: 33 разных голоса\n⚡ Быстро: Мгновенная генерация\n\nПросто выберите голос и нажмите "Прослушать"!')}
-                        title="Информация об улучшенных голосах"
-                      >
-                        ℹ️
-                      </button>
+            <button
+              className="btn btn-small btn-info"
+              onClick={() => alert('33 профессиональных голоса ElevenLabs!\n\n🎤 Высокое качество: Студийное звучание\n🌍 Многоязычность: Поддержка русского языка\n👥 Разнообразие: 33 разных голоса\n⚡ Быстро: Мгновенная генерация\n\n⚠️ ВНИМАНИЕ: На некоторых устройствах/браузерах может не работать из-за CORS ограничений. В таком случае используйте системный голос "Агата".')}
+              title="Информация об улучшенных голосах"
+            >
+              ℹ️
+            </button>
                     </>
                   )}
                 </div>
