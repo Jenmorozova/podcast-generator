@@ -85,21 +85,19 @@ function App() {
       const availableVoices = window.speechSynthesis.getVoices()
       const russianVoices = availableVoices.filter(voice => voice.lang.startsWith('ru'))
       
-      console.log(`🎤 Загружено голосов: ${availableVoices.length}`)
-      console.log(`🇷🇺 Русских голосов: ${russianVoices.length}`)
-      console.log('📋 Доступные голоса:', availableVoices.map(v => `${v.name} (${v.lang})`))
+      console.log(`🎤 Загружено русских голосов: ${russianVoices.length}`)
+      console.log('📋 Русские голоса:', russianVoices.map(v => `${v.name} (${v.lang})`))
       
-      setVoices(availableVoices)
+      // Показываем только русские голоса
+      setVoices(russianVoices)
       setRussianVoicesCount(russianVoices.length)
       
-      // Выбираем русский голос по умолчанию, если доступен
-      const russianVoice = russianVoices.find(voice => voice.lang.startsWith('ru'))
-      if (russianVoice) {
-        setSelectedVoice(russianVoice)
-        console.log(`🇷🇺 Выбран русский голос: ${russianVoice.name}`)
-      } else if (availableVoices.length > 0) {
-        setSelectedVoice(availableVoices[0])
-        console.log(`🌍 Выбран голос по умолчанию: ${availableVoices[0].name}`)
+      // Выбираем первый русский голос по умолчанию
+      if (russianVoices.length > 0) {
+        setSelectedVoice(russianVoices[0])
+        console.log(`🇷🇺 Выбран русский голос: ${russianVoices[0].name}`)
+      } else {
+        console.log('⚠️ Русские голоса не найдены!')
       }
       
       setIsInitialized(true)
@@ -663,7 +661,7 @@ function App() {
           <div className="settings-grid">
             <div className="setting-item">
               <div className="voice-selector">
-                <label htmlFor="voice-select">Выбор голоса ({voices.length} системных + {externalVoices.length} внешних)</label>
+                <label htmlFor="voice-select">Выбор голоса</label>
                 
                 {/* Переключатель между системными и внешними голосами */}
                 <div className="voice-mode-toggle">
