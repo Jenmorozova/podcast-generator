@@ -64,13 +64,41 @@ function App() {
     setIsLoadingExternalVoices(true)
     
     const externalVoicesList = [
-      // Системные голоса с улучшенным поиском
-      { id: 'system-female', name: 'Системный (женский)', provider: 'System', gender: 'female', lang: 'ru' },
-      { id: 'system-male', name: 'Системный (мужской)', provider: 'System', gender: 'male', lang: 'ru' },
-      { id: 'system-soft', name: 'Системный (мягкий)', provider: 'System', gender: 'female', lang: 'ru' },
-      { id: 'system-deep', name: 'Системный (глубокий)', provider: 'System', gender: 'male', lang: 'ru' },
-      { id: 'system-fast', name: 'Системный (быстрый)', provider: 'System', gender: 'female', lang: 'ru' },
-      { id: 'system-slow', name: 'Системный (медленный)', provider: 'System', gender: 'male', lang: 'ru' }
+      // ElevenLabs голоса
+      { id: 'elevenlabs-rachel', name: 'ElevenLabs Рейчел', provider: 'ElevenLabs', gender: 'female', lang: 'ru', voiceId: '21m00Tcm4TlvDq8ikWAM' },
+      { id: 'elevenlabs-drew', name: 'ElevenLabs Дрю', provider: 'ElevenLabs', gender: 'male', lang: 'ru', voiceId: '29vD33N1CtxCmqQRPOHJ' },
+      { id: 'elevenlabs-clyde', name: 'ElevenLabs Клайд', provider: 'ElevenLabs', gender: 'male', lang: 'ru', voiceId: '2EiwWnXFnvU5JabPnv8n' },
+      { id: 'elevenlabs-paul', name: 'ElevenLabs Пол', provider: 'ElevenLabs', gender: 'male', lang: 'ru', voiceId: '5Q0t7uMcjvnagumLfvZi' },
+      { id: 'elevenlabs-domi', name: 'ElevenLabs Доми', provider: 'ElevenLabs', gender: 'female', lang: 'ru', voiceId: 'AZnzlk1XvdvUeBnXmlld' },
+      { id: 'elevenlabs-dave', name: 'ElevenLabs Дейв', provider: 'ElevenLabs', gender: 'male', lang: 'ru', voiceId: 'CYw3kZ02Hs0563khs1Fj' },
+      { id: 'elevenlabs-fin', name: 'ElevenLabs Финн', provider: 'ElevenLabs', gender: 'male', lang: 'ru', voiceId: 'D38z5RcWu1voky8WS1ja' },
+      { id: 'elevenlabs-sarah', name: 'ElevenLabs Сара', provider: 'ElevenLabs', gender: 'female', lang: 'ru', voiceId: 'EXAVITQu4vr4xnSDxMaL' },
+      { id: 'elevenlabs-antoni', name: 'ElevenLabs Антони', provider: 'ElevenLabs', gender: 'male', lang: 'ru', voiceId: 'ErXwobaYiN019PkySvjV' },
+      { id: 'elevenlabs-thomas', name: 'ElevenLabs Томас', provider: 'ElevenLabs', gender: 'male', lang: 'ru', voiceId: 'GBv7mTt0atIp3Br8iCZE' },
+      { id: 'elevenlabs-charlie', name: 'ElevenLabs Чарли', provider: 'ElevenLabs', gender: 'male', lang: 'ru', voiceId: 'IKne3meq5aSn9XLyUdCD' },
+      { id: 'elevenlabs-emily', name: 'ElevenLabs Эмили', provider: 'ElevenLabs', gender: 'female', lang: 'ru', voiceId: 'LcfcDJNUP1GQjkznOkx1' },
+      { id: 'elevenlabs-elli', name: 'ElevenLabs Элли', provider: 'ElevenLabs', gender: 'female', lang: 'ru', voiceId: 'MF3mGyEYCl7XYWbV9V6O' },
+      { id: 'elevenlabs-callum', name: 'ElevenLabs Каллум', provider: 'ElevenLabs', gender: 'male', lang: 'ru', voiceId: 'N2lVS1w4EtoT3dr4eOWO' },
+      { id: 'elevenlabs-liam', name: 'ElevenLabs Лиам', provider: 'ElevenLabs', gender: 'male', lang: 'ru', voiceId: 'TX3LPaxmHKxFdv7VOQHJ' },
+      { id: 'elevenlabs-charlotte', name: 'ElevenLabs Шарлотта', provider: 'ElevenLabs', gender: 'female', lang: 'ru', voiceId: 'XB0fqtUnx1vHXZsaMqox' },
+      { id: 'elevenlabs-alice', name: 'ElevenLabs Алиса', provider: 'ElevenLabs', gender: 'female', lang: 'ru', voiceId: 'Xb7hH8MSUJpSbSDYk0k2' },
+      { id: 'elevenlabs-matilda', name: 'ElevenLabs Матильда', provider: 'ElevenLabs', gender: 'female', lang: 'ru', voiceId: 'XrExE9yKIg1WjnnlVkGX' },
+      { id: 'elevenlabs-james', name: 'ElevenLabs Джеймс', provider: 'ElevenLabs', gender: 'male', lang: 'ru', voiceId: 'ZQe5CQoFyQ0LmMjyu4vO' },
+      { id: 'elevenlabs-joseph', name: 'ElevenLabs Джозеф', provider: 'ElevenLabs', gender: 'male', lang: 'ru', voiceId: 'Zlb1dXrM653N07WRdFW3' },
+      { id: 'elevenlabs-jeremy', name: 'ElevenLabs Джереми', provider: 'ElevenLabs', gender: 'male', lang: 'ru', voiceId: 'bVMeCyTHy58xNoL34h3p' },
+      { id: 'elevenlabs-michael', name: 'ElevenLabs Майкл', provider: 'ElevenLabs', gender: 'male', lang: 'ru', voiceId: 'flq6f7yk4E4fJM5XTYuZ' },
+      { id: 'elevenlabs-ethan', name: 'ElevenLabs Итан', provider: 'ElevenLabs', gender: 'male', lang: 'ru', voiceId: 'g5CIjZEefAph4nQFvHAz' },
+      { id: 'elevenlabs-gigi', name: 'ElevenLabs Джиджи', provider: 'ElevenLabs', gender: 'female', lang: 'ru', voiceId: 'jBpfuIE2acCO8z3wKNLl' },
+      { id: 'elevenlabs-freya', name: 'ElevenLabs Фрейя', provider: 'ElevenLabs', gender: 'female', lang: 'ru', voiceId: 'jsCqWAovK2LkecY7zXl4' },
+      { id: 'elevenlabs-grace', name: 'ElevenLabs Грейс', provider: 'ElevenLabs', gender: 'female', lang: 'ru', voiceId: 'oWAxZDx7w5VEj9dCyTzz' },
+      { id: 'elevenlabs-daniel', name: 'ElevenLabs Дэниел', provider: 'ElevenLabs', gender: 'male', lang: 'ru', voiceId: 'onwK4e9ZLuTAKqWW03F9' },
+      { id: 'elevenlabs-lily', name: 'ElevenLabs Лили', provider: 'ElevenLabs', gender: 'female', lang: 'ru', voiceId: 'pFZP5JQG7iQjIQuC4Bku' },
+      { id: 'elevenlabs-serenah', name: 'ElevenLabs Серана', provider: 'ElevenLabs', gender: 'female', lang: 'ru', voiceId: 'pMsXgVXv3BLzUgSkhoup' },
+      { id: 'elevenlabs-adam', name: 'ElevenLabs Адам', provider: 'ElevenLabs', gender: 'male', lang: 'ru', voiceId: 'pNInz6obpgDQGcFmaJgB' },
+      { id: 'elevenlabs-nicole', name: 'ElevenLabs Николь', provider: 'ElevenLabs', gender: 'female', lang: 'ru', voiceId: 'piTKgcLEGmPE4e6mEKli' },
+      { id: 'elevenlabs-jessie', name: 'ElevenLabs Джесси', provider: 'ElevenLabs', gender: 'female', lang: 'ru', voiceId: 't0jbNlBVZ17f02VDIeMI' },
+      { id: 'elevenlabs-ryan', name: 'ElevenLabs Райан', provider: 'ElevenLabs', gender: 'male', lang: 'ru', voiceId: 'wViXBPUzp2ZZixB1xQuM' },
+      { id: 'elevenlabs-sam', name: 'ElevenLabs Сэм', provider: 'ElevenLabs', gender: 'male', lang: 'ru', voiceId: 'yoZ06aMxZJJ28mfd3POQ' }
     ]
     
     setExternalVoices(externalVoicesList)
@@ -168,7 +196,70 @@ function App() {
     try {
       let audioUrl = ''
       
-      if (voice.provider === 'System') {
+      if (voice.provider === 'ElevenLabs') {
+        // ElevenLabs TTS API
+        console.log('🎤 Используем ElevenLabs:', voice.name)
+        
+        const apiKey = 'sk_023813124d9f4c186725d0647662cda61762f277146e8cf3'
+        const voiceId = voice.voiceId
+        
+        try {
+          const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+            method: 'POST',
+            headers: {
+              'Accept': 'audio/mpeg',
+              'Content-Type': 'application/json',
+              'xi-api-key': apiKey
+            },
+            body: JSON.stringify({
+              text: processTextForSpeech(text),
+              model_id: 'eleven_multilingual_v2',
+              voice_settings: {
+                stability: 0.5,
+                similarity_boost: 0.5,
+                style: 0.0,
+                use_speaker_boost: true
+              }
+            })
+          })
+          
+          if (!response.ok) {
+            throw new Error(`ElevenLabs API error: ${response.status} ${response.statusText}`)
+          }
+          
+          const audioBlob = await response.blob()
+          const audioUrl = URL.createObjectURL(audioBlob)
+          const audio = new Audio(audioUrl)
+          
+          audio.oncanplay = () => {
+            console.log('✅ ElevenLabs TTS готово к воспроизведению')
+            audio.play().catch(error => {
+              console.error('❌ Ошибка воспроизведения:', error)
+              setIsListening(false)
+              alert('Не удалось воспроизвести аудио от ElevenLabs.')
+            })
+          }
+          
+          audio.onended = () => {
+            setIsListening(false)
+            console.log('✅ Воспроизведение завершено')
+            URL.revokeObjectURL(audioUrl)
+          }
+          
+          audio.onerror = (error) => {
+            setIsListening(false)
+            console.error('❌ Ошибка ElevenLabs TTS:', error)
+            URL.revokeObjectURL(audioUrl)
+            alert('Ошибка воспроизведения аудио от ElevenLabs.')
+          }
+          
+        } catch (error) {
+          setIsListening(false)
+          console.error('❌ Ошибка ElevenLabs API:', error)
+          alert('Ошибка при обращении к ElevenLabs API. Проверьте подключение к интернету.')
+        }
+        
+      } else if (voice.provider === 'System') {
         // Системные голоса с разными характеристиками
         console.log('🎤 Используем системный голос:', voice.name)
         
@@ -828,7 +919,7 @@ function App() {
                       </select>
                       <button
                         className="btn btn-small btn-info"
-                        onClick={() => alert('6 русских голосов с разными характеристиками!\n\n👩 Женские: Обычный, Мягкий, Быстрый\n👨 Мужские: Обычный, Глубокий, Медленный\n🆓 Бесплатно: Работает без интернета\n⚡ Умно: Автоматически находит лучший голос\n\nПросто выберите голос и нажмите "Прослушать"!')}
+                        onClick={() => alert('33 профессиональных голоса ElevenLabs!\n\n🎤 Высокое качество: Студийное звучание\n🌍 Многоязычность: Поддержка русского языка\n👥 Разнообразие: 33 разных голоса\n⚡ Быстро: Мгновенная генерация\n\nПросто выберите голос и нажмите "Прослушать"!')}
                         title="Информация об улучшенных голосах"
                       >
                         ℹ️
