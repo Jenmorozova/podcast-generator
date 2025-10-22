@@ -56,9 +56,9 @@ function App() {
     console.log('📱 Telegram Web App инициализирован')
     console.log('👤 Пользователь:', WebApp.initDataUnsafe?.user?.username || 'Аноним')
     
-    // Предупреждаем о проблемах с внешними голосами
+    // Диагностика внешних голосов
     setTimeout(() => {
-      console.log('⚠️ Внешние голоса не работают из-за CORS ограничений')
+      console.log('🔍 Диагностика внешних голосов...')
     }, 2000)
   }, [])
 
@@ -683,8 +683,16 @@ function App() {
           const apiKey = 'sk_023813124d9f4c186725d0647662cda61762f277146e8cf3'
           const voiceId = selectedExternalVoice.voiceId
           
+          console.log('🔍 Диагностика ElevenLabs API:')
+          console.log('📍 URL:', window.location.origin)
+          console.log('🎤 Voice ID:', voiceId)
+          console.log('📝 Text length:', processTextForSpeech(script).length)
+          
           // Используем наш прокси-сервер для обхода CORS
-          const response = await fetch('/api/elevenlabs-proxy', {
+          const proxyUrl = '/api/elevenlabs-proxy'
+          console.log('🌐 Прокси URL:', proxyUrl)
+          
+          const response = await fetch(proxyUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -695,6 +703,9 @@ function App() {
               apiKey: apiKey
             })
           })
+          
+          console.log('📡 Response status:', response.status)
+          console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()))
           
           if (!response.ok) {
             throw new Error(`ElevenLabs API error: ${response.status} ${response.statusText}`)
@@ -721,46 +732,62 @@ function App() {
           return
           
         } catch (error) {
-          console.error('❌ Ошибка ElevenLabs API:', error)
+          console.error('❌ Ошибка прокси ElevenLabs:', error)
           
-          // Показываем детальную информацию об ошибке
-          const errorMessage = error.message || 'Неизвестная ошибка'
-          const isCorsError = errorMessage.includes('CORS') || errorMessage.includes('cors') || errorMessage.includes('Cross-Origin')
+          // Пробуем прямой запрос к ElevenLabs как fallback
+          console.log('🔄 Пробуем прямой запрос к ElevenLabs...')
           
-          const instructions = `🎙️ ELEVENLABS API НЕ ДОСТУПЕН
-
-❌ Ошибка: ${errorMessage}
-
-${isCorsError ? '🔒 CORS блокировка:' : '🌐 Проблема с сетью:'}
-${isCorsError ? '• Браузер блокирует запросы к ElevenLabs' : '• Проблемы с подключением к API'}
-• Это нормально для некоторых браузеров/устройств
-
-💡 РЕШЕНИЯ:
-
-1️⃣ Используйте системный голос "Агата" (всегда работает)
-2️⃣ Переключитесь на "Системные голоса" в настройках
-3️⃣ Попробуйте другой браузер (Chrome обычно работает лучше)
-
-📝 НАСТРОЙКИ:
-• Голос: ${selectedExternalVoice.name}
-• Текст: ${script.substring(0, 50)}...`
-
-          alert(instructions)
-          
-          // Предлагаем переключиться на системные голоса
-          const switchToSystem = confirm('🔄 Переключиться на системный голос "Агата"?')
-          
-          if (switchToSystem) {
-            // Переключаемся на системные голоса
-            setUseExternalTTS(false)
-            alert('✅ Переключено на системный голос "Агата". Теперь попробуйте "Скачать MP3" снова.')
+          try {
+            const directResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+              method: 'POST',
+              headers: {
+                'Accept': 'audio/mpeg',
+                'Content-Type': 'application/json',
+                'xi-api-key': apiKey
+              },
+              body: JSON.stringify({
+                text: processTextForSpeech(script),
+                model_id: 'eleven_multilingual_v2',
+                voice_settings: {
+                  stability: 0.5,
+                  similarity_boost: 0.5,
+                  style: 0.0,
+                  use_speaker_boost: true
+                }
+              })
+            })
+            
+            console.log('📡 Direct response status:', directResponse.status)
+            
+            if (directResponse.ok) {
+              const audioBlob = await directResponse.blob()
+              const audioUrl = URL.createObjectURL(audioBlob)
+              
+              const downloadLink = document.createElement('a')
+              downloadLink.href = audioUrl
+              downloadLink.download = `podcast-${new Date().toISOString().split('T')[0]}.mp3`
+              document.body.appendChild(downloadLink)
+              downloadLink.click()
+              document.body.removeChild(downloadLink)
+              
+              setTimeout(() => {
+                URL.revokeObjectURL(audioUrl)
+              }, 1000)
+              
+              console.log('✅ MP3 файл скачан через прямой запрос')
+              setIsGenerating(false)
+              return
+            }
+          } catch (directError) {
+            console.error('❌ Прямой запрос тоже не работает:', directError)
           }
           
-          // Воспроизводим через системный голос как fallback
+          // Если ничего не работает, показываем системный голос
+          console.log('🔄 Переключаемся на системный голос...')
+          
           const processedScript = processTextForSpeech(script)
           const utterance = new SpeechSynthesisUtterance(processedScript)
           
-          // Используем системный голос
           const allVoices = window.speechSynthesis.getVoices()
           const systemVoice = allVoices.find(v => v.lang && v.lang.startsWith('ru')) || allVoices[0]
           
