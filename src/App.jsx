@@ -176,7 +176,13 @@ function App() {
         let systemVoice = null
         
         // Для всех системных голосов используем первый доступный русский голос
-        systemVoice = voices.find(v => v.lang && v.lang.startsWith('ru')) || voices[0]
+        // Сначала получаем все голоса из speechSynthesis
+        const allVoices = window.speechSynthesis.getVoices()
+        console.log('🔍 Все доступные голоса:', allVoices.length)
+        console.log('🔍 Русские голоса:', allVoices.filter(v => v.lang && v.lang.startsWith('ru')).map(v => v.name))
+        
+        systemVoice = allVoices.find(v => v.lang && v.lang.startsWith('ru')) || allVoices[0]
+        console.log('🎯 Выбранный системный голос:', systemVoice ? systemVoice.name : 'НЕ НАЙДЕН')
         
         if (systemVoice) {
           console.log('🔄 Переключаемся на системный голос:', systemVoice.name)
